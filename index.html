@@ -1399,14 +1399,27 @@ function finvizSlug(name = '') {
     .toLowerCase()
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/[^a-z0-9]+/g, '')
     .replace(/^_+|_+$/g, '');
 }
 function getFinvizUrl(name, explicitType = null) {
   const type = explicitType || (currentMode === 'sektori' ? 'sector' : 'industry');
-  const slug = finvizSlug(name);
+  const sectorMap = {
+    'Basic Materials': 'basicmaterials',
+    'Communication Services': 'communicationservices',
+    'Consumer Cyclical': 'consumercyclical',
+    'Consumer Defensive': 'consumerdefensive',
+    'Energy': 'energy',
+    'Financial': 'financial',
+    'Healthcare': 'healthcare',
+    'Industrials': 'industrials',
+    'Real Estate': 'realestate',
+    'Technology': 'technology',
+    'Utilities': 'utilities'
+  };
+  const slug = type === 'sector' ? (sectorMap[name] || finvizSlug(name)) : finvizSlug(name);
   const filterPrefix = type === 'sector' ? 'sec_' : 'ind_';
-  return `https://finviz.com/screener.ashx?v=111&f=${filterPrefix}${slug}`;
+  return `https://finviz.com/screener.ashx?f=${filterPrefix}${slug}&v=211`;
 }
 function finvizLink(name, explicitType = null) {
   const safeName = String(name || '');
