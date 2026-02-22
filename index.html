@@ -1,0 +1,3222 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rotacija Sektora & Industrija</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c10;
+    --bg2: #0d1117;
+    --bg3: #111820;
+    --bg4: #161e28;
+    --border: #1e2a38;
+    --amber: #f59e0b;
+    --amber-dim: #92600a;
+    --green: #22d3a0;
+    --green-dim: #0f5e47;
+    --red: #f43f5e;
+    --red-dim: #7a1d2e;
+    --blue: #38bdf8;
+    --cyan: #22d3ee;
+    --purple: #a78bfa;
+    --text: #cbd5e1;
+    --text-dim: #475569;
+    --text-bright: #f1f5f9;
+    --signal: #fb923c;
+    --signal-bg: rgba(251,146,60,0.1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo span { color: var(--text-dim); font-size: 11px; font-weight: 300; letter-spacing: 1px; }
+  .header-right { display:flex; align-items:center; gap:16px; }
+  .header-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* ─── MODE TOGGLE ─── */
+  .mode-toggle {
+    display: flex;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .mode-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .mode-btn:hover { color: var(--text); }
+  .mode-btn.active { background: var(--amber-dim); color: var(--amber); }
+
+  /* ─── NAV ─── */
+  nav {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+  }
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 12px 18px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+  /* ─── MAIN ─── */
+  main { padding: 24px; max-width: 1600px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 14px;
+    background: var(--amber);
+    border-radius: 2px;
+  }
+
+  /* ─── FORM GRID ─── */
+  .form-header {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: end;
+  }
+  .form-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  input[type="date"], input[type="text"], input[type="number"], input[type="password"], select, textarea {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-bright);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 8px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--amber); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  /* ─── SECTOR/INDUSTRY GRID ─── */
+  .sector-grid {
+    display: grid;
+    grid-template-columns: 200px repeat(6, 1fr);
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+  .grid-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .grid-header:first-child { text-align: left; }
+  .sector-name {
+    font-size: 12px;
+    color: var(--text);
+    padding: 6px 4px;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+  }
+  .sector-input { position: relative; }
+  .sector-input input {
+    text-align: right;
+    padding: 6px 20px 6px 8px;
+    font-size: 13px;
+  }
+  .sector-input::after {
+    content: '%';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    pointer-events: none;
+  }
+  .sector-row { display: contents; }
+  .sector-row:hover .sector-name { color: var(--amber); }
+
+  /* ─── INDUSTRY PICKER ─── */
+  .industry-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .ind-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--border);
+    background: var(--bg4);
+    color: var(--text-dim);
+    user-select: none;
+  }
+  .ind-chip:hover { border-color: var(--amber-dim); color: var(--text); }
+  .ind-chip.active { background: var(--amber-dim); color: var(--amber); border-color: var(--amber-dim); }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--amber); color: #000; }
+  .btn-primary:hover { background: #fbbf24; }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red-dim); }
+  .btn-danger:hover { background: var(--red-dim); }
+  .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--text-dim); }
+  .btn-ai { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+  .btn-ai:hover { background: linear-gradient(135deg, #818cf8, #a78bfa); }
+  .btn-sm { padding: 5px 12px; font-size: 11px; }
+  .btn-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+  /* ─── TABLES ─── */
+  .table-wrapper { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  th {
+    background: var(--bg3);
+    color: var(--text-dim);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    text-align: right;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+    transition: color 0.2s;
+  }
+  th:first-child { text-align: left; }
+  th:hover { color: var(--amber); }
+  th.sorted { color: var(--amber); }
+  th .sort-arrow { margin-left: 4px; }
+  td {
+    padding: 9px 12px;
+    text-align: right;
+    border-bottom: 1px solid rgba(30,42,56,0.5);
+    white-space: nowrap;
+  }
+  td:first-child { text-align: left; color: var(--text-bright); font-weight: 500; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ─── VALUE COLORS ─── */
+  .val-pos2 { color: #10b981; font-weight: 600; }
+  .val-pos1 { color: #34d399; }
+  .val-neg1 { color: #fb7185; }
+  .val-neg2 { color: #f43f5e; font-weight: 600; }
+  .val-zero { color: var(--text-dim); }
+
+  /* ─── RANK BADGE ─── */
+  .rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .rank-1 { background: #7c5c00; color: #fbbf24; }
+  .rank-2 { background: #4a5568; color: #94a3b8; }
+  .rank-3 { background: #3d2f1a; color: #c2956c; }
+
+  /* ─── SIGNAL ─── */
+  .signal-row td { background: var(--signal-bg) !important; }
+  .signal-badge {
+    display: inline-block;
+    background: var(--signal-bg);
+    color: var(--signal);
+    border: 1px solid rgba(251,146,60,0.3);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-left: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ─── CHARTS ─── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .chart-container { position: relative; height: 320px; }
+
+  /* ─── HISTORY ─── */
+  .history-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .history-item:hover { border-color: var(--amber); }
+  .history-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--amber);
+  }
+  .history-label { font-size: 14px; font-weight: 600; color: var(--text-bright); }
+
+  /* ─── STATS ─── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    padding: 14px 20px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-bright);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { border-left-color: var(--red); }
+
+  /* ─── PERIOD SELECTOR ─── */
+  .period-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .period-tab {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 5px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .period-tab:hover { color: var(--text); }
+  .period-tab.active { background: var(--amber-dim); color: var(--amber); border-color: var(--amber-dim); }
+
+  /* ─── HEATMAP ─── */
+  .heatmap {
+    display: grid;
+    gap: 3px;
+    margin-bottom: 16px;
+  }
+  .hm-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    padding: 6px;
+    text-align: center;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .hm-label {
+    font-size: 12px;
+    padding: 8px 6px;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .hm-cell {
+    border-radius: 3px;
+    padding: 8px 4px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    transition: opacity 0.2s;
+  }
+  .hm-cell:hover { opacity: 0.8; cursor: default; }
+
+  /* ─── AI CHAT ─── */
+  .ai-panel {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 200px);
+    min-height: 500px;
+  }
+  .ai-header-bar {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .ai-messages {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .ai-msg {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .ai-msg-user {
+    align-self: flex-end;
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid rgba(245,158,11,0.3);
+  }
+  .ai-msg-ai {
+    align-self: flex-start;
+    background: var(--bg4);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .ai-msg-system {
+    align-self: center;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 4px 12px;
+  }
+  .ai-msg-ai strong { color: var(--amber); }
+  .ai-msg-ai code {
+    background: var(--bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--cyan);
+  }
+  .ai-msg-ai pre {
+    background: var(--bg);
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 8px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .ai-input-row {
+    display: flex;
+    gap: 8px;
+  }
+  .ai-input-row textarea {
+    flex: 1;
+    min-height: 44px;
+    max-height: 120px;
+  }
+  .ai-quick-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .qa-btn {
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .qa-btn:hover { border-color: var(--purple); color: var(--purple); }
+
+  /* ─── AI SETTINGS ─── */
+  .ai-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .api-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+  }
+  .api-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .api-card-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+  .api-status {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .api-status.ok { background: var(--green-dim); color: var(--green); }
+  .api-status.no { background: var(--red-dim); color: var(--red); }
+
+  /* ─── YOY COMPARISON ─── */
+  .yoy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .yoy-delta-pos { color: var(--green); }
+  .yoy-delta-neg { color: var(--red); }
+  .yoy-selector {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  /* ─── WIZARD ─── */
+  .wizard-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 16px;
+  }
+  .wizard-preview {
+    min-height: 220px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    background: var(--bg3);
+    overflow: hidden;
+  }
+  .wizard-preview img { max-width: 100%; max-height: 340px; display:block; }
+  .wizard-note {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-top: 10px;
+  }
+  .wizard-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--blue);
+    margin-top: 8px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  /* ─── MISC ─── */
+  .flex { display: flex; }
+  .gap-12 { gap: 12px; }
+  .mb-16 { margin-bottom: 16px; }
+  .text-dim { color: var(--text-dim); }
+  .text-amber { color: var(--amber); }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  select option { background: var(--bg3); }
+
+  @media (max-width: 900px) {
+    .charts-grid, .yoy-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .form-header, .wizard-grid { grid-template-columns: 1fr; }
+    .ai-settings-grid { grid-template-columns: 1fr; }
+    .sector-grid { grid-template-columns: 160px repeat(6, 1fr); font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    ▣ ROTACIJA SEKTORA
+    <span>sector & industry tracker</span>
+  </div>
+  <div class="header-right">
+    <div class="mode-toggle">
+      <button class="mode-btn active" onclick="setMode('sektori')">Sektori</button>
+      <button class="mode-btn" onclick="setMode('industrije')">Industrije</button>
+    </div>
+    <div class="header-time mono" id="clock"></div>
+  </div>
+</header>
+
+<nav id="mainNav">
+  <button class="nav-btn active" onclick="showTab('unos')">[ Unos ]</button>
+  <button class="nav-btn" onclick="showTab('rang')">[ Rang ]</button>
+  <button class="nav-btn" onclick="showTab('vizual')">[ Vizualizacije ]</button>
+  <button class="nav-btn" onclick="showTab('signali')">[ Signali ]</button>
+  <button class="nav-btn" onclick="showTab('yoy')">[ YoY Usporedba ]</button>
+  <button class="nav-btn" onclick="showTab('povijest')">[ Povijest ]</button>
+  <button class="nav-btn" onclick="showTab('ai')" style="color:var(--purple)">[ ◆ AI Asistent ]</button>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB: UNOS                                               -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-unos" class="tab-panel active">
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- Industry picker (visible only in industrije mode) -->
+  <div class="card" id="industryPickerCard" style="display:none">
+    <div class="card-title">Odaberi industrije za praćenje</div>
+    <div style="margin-bottom:10px">
+      <input type="text" id="indSearchInput" placeholder="Pretraži industrije..." style="max-width:400px" oninput="filterIndustryPicker()">
+    </div>
+    <div class="industry-picker" id="industryPicker"></div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-primary btn-sm" onclick="selectAllIndustries()">Odaberi sve</button>
+      <button class="btn btn-secondary btn-sm" onclick="selectTopIndustries()">Top 30</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearIndustrySelection()">Očisti odabir</button>
+      <span class="mono" style="font-size:11px;color:var(--text-dim)" id="indCount">0 odabrano</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" id="unosTitle">Novi unos podataka – sektori</div>
+    <div class="form-header">
+      <div>
+        <div class="form-label">Datum (kraj tjedna)</div>
+        <input type="date" id="inputDate">
+      </div>
+      <div>
+        <div class="form-label">Naziv / bilješka (opcionalno)</div>
+        <input type="text" id="inputLabel" placeholder="npr. Tjedan 8 – CPI objava">
+      </div>
+    </div>
+
+    <div class="sector-grid" id="sectorGrid">
+      <div class="grid-header" style="text-align:left">Sektor</div>
+      <div class="grid-header">Tjedno</div>
+      <div class="grid-header">Mjesečno</div>
+      <div class="grid-header">Tromjesečno</div>
+      <div class="grid-header">Polugodišnje</div>
+      <div class="grid-header">Godišnje</div>
+      <div class="grid-header">YTD</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveEntry()">Spremi unos</button>
+      <button class="btn btn-secondary" onclick="clearForm()">Resetiraj formu</button>
+      <button class="btn btn-secondary" onclick="pasteFromClipboard()">Uvezi iz clipboard-a</button>
+      <button class="btn btn-secondary" onclick="smartPasteFinviz()" title="Kopiraj CIJELU Finviz tablicu (Ctrl+A na stranici) i klikni ovdje">📋 Smart Paste (Finviz tablica)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">AI Wizard – finviz screenshot → auto unos</div>
+    <div class="wizard-grid">
+      <div>
+        <div class="btn-row" style="margin-bottom:10px">
+          <button class="btn btn-secondary btn-sm" onclick="openFinvizPage()">Otvori Finviz</button>
+          <button class="btn btn-secondary btn-sm" onclick="captureFinvizScreen()">Snimi screenshot</button>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('wizardFile').click()">Učitaj screenshot</button>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('wizardFiles').click()">📸 Učitaj više screenshotova</button>
+        </div>
+        <input type="file" id="wizardFile" accept="image/*" style="display:none" onchange="handleWizardFile(event)">
+        <input type="file" id="wizardFiles" accept="image/*" multiple style="display:none" onchange="handleWizardFiles(event)">
+        <div class="wizard-preview" id="wizardPreview">Nema učitanog screenshota</div>
+        <div id="wizardBatchThumbs" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
+      </div>
+      <div>
+        <div class="form-label">AI Provider za OCR</div>
+        <select id="wizardProvider" onchange="updateWizardModelSelect()">
+          <option value="groq">Groq</option>
+          <option value="gemini">Google Gemini</option>
+          <option value="openrouter">OpenRouter</option>
+        </select>
+        <div class="form-label" style="margin-top:10px">Model</div>
+        <select id="wizardModel"></select>
+        <div class="btn-row" style="margin-top:14px">
+          <button class="btn btn-primary" onclick="runAiWizard()">AI Wizard: preuzmi podatke</button>
+          <button class="btn btn-ai btn-sm" onclick="runBatchAiWizard()" id="batchWizardBtn" style="display:none">🔄 Batch OCR (svi screenshotovi)</button>
+        </div>
+        <div class="wizard-status" id="wizardStatus"></div>
+        <!-- Progress bar for batch -->
+        <div id="wizardProgress" style="display:none;margin-top:8px">
+          <div style="background:var(--bg);border-radius:3px;height:6px;overflow:hidden">
+            <div id="wizardProgressBar" style="background:var(--amber);height:100%;width:0%;transition:width 0.3s"></div>
+          </div>
+          <div class="mono" style="font-size:10px;color:var(--text-dim);margin-top:4px" id="wizardProgressText"></div>
+        </div>
+        <div class="wizard-note">
+          <strong>Sektori:</strong> Jedan screenshot je dovoljan.<br>
+          <strong>Industrije:</strong> Preporučamo Smart Paste (najbrže) ili učitaj više screenshotova za batch OCR.
+          Finviz prikazuje ~30 industrija po stranici — snimi 5 screenshotova za sve.<br>
+          <strong>💡 Najbrži način:</strong> Na Finviz stranici označi cijelu tablicu (Ctrl+A), kopiraj (Ctrl+C), pa klikni "Smart Paste".
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Upute za unos</div>
+    <div style="font-size:13px;line-height:1.8;color:var(--text-dim)">
+      <p>1. Idi na <span class="text-amber mono">finviz.com/groups.ashx</span> → odaberi sektor ili industriju</p>
+      <p>2. <strong style="color:var(--amber)">Najbrži način (Smart Paste):</strong> Na Finviz stranici označi tablicu <span class="mono">Ctrl+A</span>, kopiraj <span class="mono">Ctrl+C</span>, klikni "Smart Paste" — automatski prepoznaje SVE industrije/sektore</p>
+      <p>3. <strong>Clipboard paste:</strong> Radi za retke formata <span class="mono">Naziv 1.2 3.4 -2.1 5.0 -4.2 2.7</span></p>
+      <p>4. <strong>AI Wizard:</strong> Screenshot → OCR. Za industrije koristi batch (više screenshotova)</p>
+      <p>5. Brzi unos: <span class="mono">Ctrl/Cmd + S</span> sprema, <span class="mono">Alt + R</span> resetira formu</p>
+      <p>6. Smart Paste automatski dodaje nove industrije u picker ako ih prepozna</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB: RANG TABLICA                                       -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-rang" class="tab-panel">
+  <div class="card">
+    <div class="card-title" id="rangTitle">Rang tablica sektora</div>
+    <div class="flex gap-12 mb-16" style="flex-wrap:wrap;align-items:center">
+      <div>
+        <div class="form-label">Odaberi tjedan</div>
+        <select id="weekSelect" onchange="renderRankTable()" style="width:260px"></select>
+      </div>
+      <div style="margin-top:20px">
+        <button class="btn btn-secondary btn-sm" onclick="sortRankBy='tjedno';sortDir=-1;renderRankTable()">Sortiraj po Tjed.</button>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table id="rankTable">
+        <thead>
+          <tr>
+            <th onclick="rankSort('sektor')">Naziv <span class="sort-arrow" id="sa-sektor"></span></th>
+            <th onclick="rankSort('tjedno')">Tjedno <span class="sort-arrow" id="sa-tjedno"></span></th>
+            <th onclick="rankSort('miesecno')">Mjes. <span class="sort-arrow" id="sa-miesecno"></span></th>
+            <th onclick="rankSort('tromj')">3 Mjes. <span class="sort-arrow" id="sa-tromj"></span></th>
+            <th onclick="rankSort('polugod')">6 Mjes. <span class="sort-arrow" id="sa-polugod"></span></th>
+            <th onclick="rankSort('godisnje')">God. <span class="sort-arrow" id="sa-godisnje"></span></th>
+            <th onclick="rankSort('ytd')">YTD <span class="sort-arrow" id="sa-ytd"></span></th>
+          </tr>
+        </thead>
+        <tbody id="rankBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Heatmapa performansi</div>
+    <div class="btn-row mb-16" style="flex-wrap:wrap">
+      <span class="form-label" style="margin:0;align-self:center">Sortiraj po:</span>
+      <button class="btn btn-secondary btn-sm" onclick="setHmSort('name')">Naziv</button>
+      <button class="btn btn-secondary btn-sm" onclick="setHmSort('tjedno')">Tjedno</button>
+      <button class="btn btn-secondary btn-sm" onclick="setHmSort('miesecno')">Mjes.</button>
+      <button class="btn btn-secondary btn-sm" onclick="setHmSort('tromj')">3 Mjes.</button>
+      <button class="btn btn-secondary btn-sm" onclick="setHmSort('polugod')">6 Mjes.</button>
+      <button class="btn btn-secondary btn-sm" onclick="setHmSort('godisnje')">God.</button>
+      <button class="btn btn-secondary btn-sm" onclick="setHmSort('ytd')">YTD</button>
+      <span style="color:var(--border)">│</span>
+      <button class="btn btn-secondary btn-sm" onclick="setHmSort('momentum')" title="Tjedno minus Godišnje — visoki momentum = kratkoročni rast u dugoročno slabom">⚡ Momentum divergencija</button>
+      <button class="btn btn-secondary btn-sm" onclick="setHmSort('reversal')" title="Tjedno pozitivno + Godišnje najgore → turnaround kandidati">🔄 Turnaround potencijal</button>
+      <button class="btn btn-secondary btn-sm" onclick="setHmSort('dispersion')" title="Razlika između najboljeg i najgoreg perioda — visoka = nesigurnost">📊 Disperzija</button>
+    </div>
+    <div id="heatmap"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB: VIZUALIZACIJE                                      -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-vizual" class="tab-panel">
+  <div class="card">
+    <div class="card-title">Odabir prikaza</div>
+    <div class="period-tabs" id="periodTabs">
+      <div class="period-tab active" onclick="setVizPeriod('tjedno',this)">Tjedno</div>
+      <div class="period-tab" onclick="setVizPeriod('miesecno',this)">Mjes.</div>
+      <div class="period-tab" onclick="setVizPeriod('tromj',this)">3 Mjes.</div>
+      <div class="period-tab" onclick="setVizPeriod('polugod',this)">6 Mjes.</div>
+      <div class="period-tab" onclick="setVizPeriod('godisnje',this)">God.</div>
+      <div class="period-tab" onclick="setVizPeriod('ytd',this)">YTD</div>
+    </div>
+    <div class="flex gap-12" style="flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <div>
+        <div class="form-label">Odaberi stavke za trend</div>
+        <select id="sectorSelect" multiple style="height:100px;width:300px;font-size:12px"></select>
+      </div>
+      <div style="margin-top:20px">
+        <button class="btn btn-secondary btn-sm" onclick="renderCharts()">Osvježi</button>
+        <button class="btn btn-secondary btn-sm" onclick="selectAllItems()">Odaberi sve</button>
+      </div>
+    </div>
+  </div>
+  <div class="charts-grid">
+    <div class="card" style="position:relative">
+      <div class="card-title">Trend kroz tjedne <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="expandChart('trendChart')">⛶ Proširi</button></div>
+      <div class="chart-container"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card" style="position:relative">
+      <div class="card-title">Rang bar – zadnji tjedan <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="expandChart('barChart')">⛶ Proširi</button></div>
+      <div class="chart-container"><canvas id="barChart"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-grid">
+    <div class="card" style="position:relative">
+      <div class="card-title">Disperzija sektora (spread) <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="expandChart('dispersionChart')">⛶ Proširi</button></div>
+      <div class="chart-container"><canvas id="dispersionChart"></canvas></div>
+    </div>
+    <div class="card" style="position:relative">
+      <div class="card-title">Breadth – % pozitivnih stavki <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="expandChart('breadthChart')">⛶ Proširi</button></div>
+      <div class="chart-container"><canvas id="breadthChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="position:relative">
+    <div class="card-title">Momentum Score (Tjedno − Godišnje) – zadnji tjedan <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="expandChart('momentumChart')">⛶ Proširi</button></div>
+    <div class="chart-container" style="height:400px"><canvas id="momentumChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Usporedba rokova – Radar</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div class="form-label" style="margin-bottom:8px">Odaberi stavku za radar</div>
+        <select id="radarSectorSelect" onchange="renderRadar()" style="width:100%"></select>
+      </div>
+      <div></div>
+    </div>
+    <div class="chart-container" style="margin-top:16px"><canvas id="radarChart"></canvas></div>
+  </div>
+</div>
+
+<!-- CHART EXPAND MODAL -->
+<div id="chartModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.85);padding:24px;cursor:pointer" onclick="closeChartModal()">
+  <div style="position:relative;width:100%;height:100%;max-width:1400px;margin:0 auto" onclick="event.stopPropagation()">
+    <button onclick="closeChartModal()" style="position:absolute;top:8px;right:12px;background:var(--bg4);border:1px solid var(--border);color:var(--text);font-size:20px;width:36px;height:36px;border-radius:4px;cursor:pointer;z-index:10">✕</button>
+    <canvas id="modalChart" style="width:100%;height:100%"></canvas>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB: SIGNALI                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-signali" class="tab-panel">
+  <div class="card">
+    <div class="card-title">Parametri signala rotacije</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px">
+      <div>
+        <div class="form-label">Min. tjedno (%) za signal</div>
+        <input type="number" id="sigTjedno" value="1.5" step="0.1">
+      </div>
+      <div>
+        <div class="form-label">Min. mjesečno (%) za signal</div>
+        <input type="number" id="sigMjesecno" value="0" step="0.1">
+      </div>
+      <div>
+        <div class="form-label">Maks. godišnje (%) za signal</div>
+        <input type="number" id="sigGodisnje" value="-5" step="0.1">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px">
+      <div>
+        <div class="form-label">Min. 3-mjesečno (%)</div>
+        <input type="number" id="sigTromj" value="" step="0.1" placeholder="opcija">
+      </div>
+      <div>
+        <div class="form-label">Maks. 6-mjesečno (%)</div>
+        <input type="number" id="sigPolugod" value="" step="0.1" placeholder="opcija">
+      </div>
+      <div>
+        <div class="form-label">Min. Momentum Score (tj-god)</div>
+        <input type="number" id="sigMomentum" value="" step="0.5" placeholder="npr. 5">
+      </div>
+    </div>
+    <div class="btn-row" style="flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="renderSignals()">Analiziraj signale</button>
+      <span style="color:var(--border)">│</span>
+      <span class="form-label" style="margin:0;align-self:center">Preseti:</span>
+      <button class="btn btn-secondary btn-sm" onclick="applySignalPreset('bounce')">🔄 Dead Cat Bounce</button>
+      <button class="btn btn-secondary btn-sm" onclick="applySignalPreset('turnaround')">📈 Turnaround</button>
+      <button class="btn btn-secondary btn-sm" onclick="applySignalPreset('momentum')">⚡ Momentum divergencija</button>
+      <button class="btn btn-secondary btn-sm" onclick="applySignalPreset('exhaustion')">💀 Downtrend iscrpljenje</button>
+      <button class="btn btn-secondary btn-sm" onclick="applySignalPreset('strength')">💪 Trajna snaga</button>
+      <button class="btn btn-secondary btn-sm" onclick="applySignalPreset('weakness')">📉 Skrivena slabost</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">⚠ Signali rotacije</div>
+    <div id="signalOutput"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔄 Turnaround kandidati – dugoročno najgori s kratkoročnim rastom</div>
+    <div id="turnaroundOutput"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Rang konzistentnosti – zadnja 4 tjedna</div>
+    <div class="table-wrapper">
+      <table id="consistencyTable">
+        <thead>
+          <tr>
+            <th>Naziv</th>
+            <th>Prj. rang (tj.)</th>
+            <th>Prj. rang (mj.)</th>
+            <th>Prj. rang (3mj.)</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody id="consistencyBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB: YOY USPOREDBA                                      -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-yoy" class="tab-panel">
+  <div class="card">
+    <div class="card-title">Usporedba s prethodnom godinom (Year-over-Year)</div>
+    <div class="yoy-selector">
+      <div>
+        <div class="form-label">Trenutni tjedan</div>
+        <select id="yoyCurrentWeek" onchange="renderYoY()" style="width:260px"></select>
+      </div>
+      <div>
+        <div class="form-label">Usporedi s tjednom</div>
+        <select id="yoyPastWeek" onchange="renderYoY()" style="width:260px"></select>
+      </div>
+      <div>
+        <div class="form-label">Period</div>
+        <select id="yoyPeriod" onchange="renderYoY()" style="width:160px">
+          <option value="tjedno">Tjedno</option>
+          <option value="miesecno">Mjesečno</option>
+          <option value="tromj">3 Mjes.</option>
+          <option value="polugod">6 Mjes.</option>
+          <option value="godisnje">Godišnje</option>
+          <option value="ytd">YTD</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="yoy-grid">
+    <div class="card">
+      <div class="card-title">Usporedna tablica</div>
+      <div class="table-wrapper">
+        <table id="yoyTable">
+          <thead>
+            <tr>
+              <th>Naziv</th>
+              <th>Trenutno</th>
+              <th>Prošlo</th>
+              <th>Delta (pp)</th>
+              <th>Promjena ranga</th>
+            </tr>
+          </thead>
+          <tbody id="yoyBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">YoY Delta vizualizacija</div>
+      <div class="chart-container"><canvas id="yoyChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Trend usporedbe – sve stavke</div>
+    <div class="chart-container" style="height:400px"><canvas id="yoyTrendChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB: POVIJEST                                           -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-povijest" class="tab-panel">
+  <div class="card">
+    <div class="card-title" id="povijestTitle">Svi unosi – sektori</div>
+    <div class="btn-row mb-16">
+      <button class="btn btn-secondary" onclick="exportJSON()">Izvoz JSON</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">Izvoz CSV</button>
+      <button class="btn btn-secondary" onclick="importJSON()">Uvoz JSON</button>
+      <button class="btn btn-danger" onclick="deleteAll()">Obriši sve podatke</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB: AI ASISTENT                                        -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-ai" class="tab-panel">
+  <div class="card">
+    <div class="card-title">◆ AI Provideri – API ključevi</div>
+    <div class="ai-settings-grid" id="aiSettingsGrid"></div>
+  </div>
+
+  <div class="card ai-panel">
+    <div class="card-title">◆ AI Chat – analiza tržišta</div>
+    <div class="ai-header-bar">
+      <div>
+        <div class="form-label">Provider</div>
+        <select id="aiChatProvider" style="width:180px" onchange="updateAiChatModel()"></select>
+      </div>
+      <div>
+        <div class="form-label">Model</div>
+        <select id="aiChatModel" style="width:280px"></select>
+      </div>
+      <div style="margin-top:20px">
+        <button class="btn btn-secondary btn-sm" onclick="clearAiChat()">Očisti chat</button>
+      </div>
+    </div>
+
+    <div class="ai-quick-actions">
+      <button class="qa-btn" onclick="quickAction('analyze')">📊 Analiziraj sektore</button>
+      <button class="qa-btn" onclick="quickAction('strategy')">🎯 Preporuči strategiju</button>
+      <button class="qa-btn" onclick="quickAction('signals')">⚡ Provjeri signale</button>
+      <button class="qa-btn" onclick="quickAction('stovall')" style="border-color:var(--amber);color:var(--amber)">🔄 Stovall ciklus</button>
+      <button class="qa-btn" onclick="quickAction('turnaround')" style="border-color:var(--green);color:var(--green)">📈 Turnaround screener</button>
+      <button class="qa-btn" onclick="quickAction('exhaustion')">💀 Downtrend iscrpljenje</button>
+      <button class="qa-btn" onclick="quickAction('divergence')">⚡ Momentum divergencija</button>
+      <button class="qa-btn" onclick="quickAction('compare')">🔄 Usporedi YoY</button>
+      <button class="qa-btn" onclick="quickAction('industries')">🏭 Industrije</button>
+      <button class="qa-btn" onclick="quickAction('macro')">🌍 Macro outlook</button>
+    </div>
+
+    <div class="ai-messages" id="aiMessages">
+      <div class="ai-msg ai-msg-system">AI Asistent spreman. Odaberi provider, unesi API ključ i postavi pitanje.</div>
+    </div>
+
+    <div class="ai-input-row">
+      <textarea id="aiInput" placeholder="Postavi pitanje o tržištu, sektorima, industrijama..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage()}"></textarea>
+      <button class="btn btn-ai" onclick="sendAiMessage()" style="height:44px">Pošalji</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// KONSTANTE
+// ═══════════════════════════════════════════════════════
+const SEKTORI = [
+  'Basic Materials','Communication Services','Consumer Cyclical',
+  'Consumer Defensive','Energy','Financial',
+  'Healthcare','Industrials','Real Estate','Technology','Utilities'
+];
+
+const ALL_INDUSTRIJE = [
+  'Advertising Agencies','Aerospace & Defense','Agricultural Inputs','Airlines',
+  'Apparel Manufacturing','Apparel Retail','Asset Management','Auto Manufacturers',
+  'Auto Parts','Banks - Diversified','Banks - Regional','Beverages - Brewers',
+  'Beverages - Non-Alcoholic','Beverages - Wineries & Distilleries','Biotechnology',
+  'Broadcasting','Building Materials','Building Products & Equipment','Business Equipment & Supplies',
+  'Capital Markets','Chemicals','Coal','Communication Equipment','Computer Hardware',
+  'Conglomerates','Consulting Services','Consumer Electronics','Copper','Credit Services',
+  'Department Stores','Diagnostics & Research','Discount Stores','Drug Manufacturers - General',
+  'Drug Manufacturers - Specialty & Generic','Education & Training Services',
+  'Electrical Equipment & Parts','Electronic Components','Electronic Gaming & Multimedia',
+  'Electronics & Computer Distribution','Engineering & Construction','Entertainment',
+  'Farm & Heavy Construction Machinery','Farm Products','Financial Conglomerates',
+  'Financial Data & Stock Exchanges','Food Distribution','Footwear & Accessories',
+  'Furnishings, Fixtures & Appliances','Gambling','Gold','Grocery Stores',
+  'Healthcare Plans','Health Information Services','Home Improvement Retail',
+  'Household & Personal Products','Industrial Distribution','Information Technology Services',
+  'Infrastructure Operations','Insurance - Diversified','Insurance - Life',
+  'Insurance - Property & Casualty','Insurance - Reinsurance','Insurance - Specialty',
+  'Insurance Brokers','Integrated Freight & Logistics','Internet Content & Information',
+  'Internet Retail','Leisure','Lodging','Lumber & Wood Production',
+  'Luxury Goods','Marine Shipping','Medical Care Facilities','Medical Devices',
+  'Medical Distribution','Medical Instruments & Supplies','Metal Fabrication','Mortgage Finance',
+  'Oil & Gas Drilling','Oil & Gas E&P','Oil & Gas Equipment & Services',
+  'Oil & Gas Integrated','Oil & Gas Midstream','Oil & Gas Refining & Marketing',
+  'Other Industrial Metals & Mining','Other Precious Metals & Mining','Packaged Foods',
+  'Packaging & Containers','Paper & Paper Products','Personal Services',
+  'Pharmaceutical Retailers','Pollution & Treatment Controls','Publishing',
+  'Railroads','Real Estate - Development','Real Estate - Diversified','Real Estate Services',
+  'REIT - Diversified','REIT - Healthcare Facilities','REIT - Hotel & Motel',
+  'REIT - Industrial','REIT - Mortgage','REIT - Office','REIT - Residential',
+  'REIT - Retail','REIT - Specialty','Rental & Leasing Services',
+  'Residential Construction','Resorts & Casinos','Restaurants','Scientific & Technical Instruments',
+  'Security & Protection Services','Semiconductor Equipment & Materials','Semiconductors',
+  'Shell Companies','Silver','Software - Application','Software - Infrastructure',
+  'Solar','Specialty Business Services','Specialty Chemicals','Specialty Industrial Machinery',
+  'Specialty Retail','Staffing & Employment Services','Steel','Telecom Services',
+  'Textile Manufacturing','Thermal Coal','Tobacco','Tools & Accessories',
+  'Travel Services','Trucking','Uranium','Utilities - Diversified',
+  'Utilities - Independent Power Producers','Utilities - Regulated Electric',
+  'Utilities - Regulated Gas','Utilities - Regulated Water','Utilities - Renewable',
+  'Waste Management'
+];
+
+const PERIODI = [
+  { key: 'tjedno',    label: 'Tjedno' },
+  { key: 'miesecno',  label: 'Mjes.' },
+  { key: 'tromj',     label: '3 Mjes.' },
+  { key: 'polugod',   label: '6 Mjes.' },
+  { key: 'godisnje',  label: 'God.' },
+  { key: 'ytd',       label: 'YTD' }
+];
+
+const STORAGE_KEYS = {
+  sektori: 'sektorRotacija_v2',
+  industrije: 'indRotacija_v1'
+};
+
+const AI_PROVIDERS = {
+  groq: {
+    name: 'Groq',
+    keyName: 'groq_api_key',
+    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+    models: [
+      { id: 'llama-3.2-90b-vision-preview', label: 'Llama 3.2 90B Vision', vision: true },
+      { id: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout', vision: true },
+      { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B', vision: false },
+      { id: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B', vision: false }
+    ],
+    buildHeaders: key => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }),
+    buildBody: (model, msgs) => ({ model, messages: msgs, temperature: 0.3, max_tokens: 4096 })
+  },
+  gemini: {
+    name: 'Google Gemini',
+    keyName: 'gemini_api_key',
+    models: [
+      { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', vision: true },
+      { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', vision: true },
+      { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', vision: true }
+    ]
+  },
+  openrouter: {
+    name: 'OpenRouter',
+    keyName: 'openrouter_api_key',
+    endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+    models: [
+      { id: 'meta-llama/llama-3.2-90b-vision-instruct:free', label: 'Llama 3.2 90B Vision (Free)', vision: true },
+      { id: 'google/gemini-2.0-flash-exp:free', label: 'Gemini 2.0 Flash (Free)', vision: true },
+      { id: 'deepseek/deepseek-chat-v3-0324:free', label: 'DeepSeek V3 (Free)', vision: false },
+      { id: 'mistralai/mistral-small-3.1-24b-instruct:free', label: 'Mistral Small 3.1 (Free)', vision: false }
+    ],
+    buildHeaders: key => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }),
+    buildBody: (model, msgs) => ({ model, messages: msgs, temperature: 0.3, max_tokens: 4096 })
+  },
+  mistral: {
+    name: 'Mistral AI',
+    keyName: 'mistral_api_key',
+    endpoint: 'https://api.mistral.ai/v1/chat/completions',
+    models: [
+      { id: 'mistral-small-latest', label: 'Mistral Small', vision: false },
+      { id: 'mistral-medium-latest', label: 'Mistral Medium', vision: false },
+      { id: 'pixtral-12b-2409', label: 'Pixtral 12B (Vision)', vision: true }
+    ],
+    buildHeaders: key => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }),
+    buildBody: (model, msgs) => ({ model, messages: msgs, temperature: 0.3, max_tokens: 4096 })
+  }
+};
+
+let currentMode = 'sektori';
+let activeIndustries = [];
+let sortRankBy = 'tjedno';
+let sortDir = -1;
+let vizPeriod = 'tjedno';
+let charts = {};
+let wizardImageDataUrl = null;
+let wizardBatchImages = [];
+let aiChatHistory = [];
+let hmSortMode = 'name';
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function getItems() {
+  return currentMode === 'sektori' ? SEKTORI : activeIndustries;
+}
+function getStorageKey() {
+  return STORAGE_KEYS[currentMode];
+}
+function getData() {
+  try { return JSON.parse(localStorage.getItem(getStorageKey())) || []; }
+  catch(e) { return []; }
+}
+function saveData(d) {
+  localStorage.setItem(getStorageKey(), JSON.stringify(d));
+}
+function sanitize(s) {
+  return s.replace(/[^a-zA-Z0-9]/g, '');
+}
+function pct(v) {
+  if (v === null || v === undefined) return '–';
+  return (v >= 0 ? '+' : '') + parseFloat(v).toFixed(2) + '%';
+}
+function valCell(v) {
+  if (v === null || v === undefined) return '<span class="val-zero">–</span>';
+  const cls = v > 3 ? 'val-pos2' : v > 0 ? 'val-pos1' : v < -3 ? 'val-neg2' : 'val-neg1';
+  return `<span class="${cls}">${(v >= 0 ? '+' : '')}${parseFloat(v).toFixed(2)}%</span>`;
+}
+function avg(arr) {
+  const valid = arr.filter(v => v !== null && !isNaN(v));
+  return valid.length ? valid.reduce((a,b) => a+b, 0) / valid.length : 0;
+}
+function showToast(msg, error = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (error ? ' error' : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function hmColor(v) {
+  if (v === null || v === undefined) return 'background:#111820;color:var(--text-dim)';
+  if (v > 5) return 'background:#064e3b;color:#6ee7b7';
+  if (v > 2) return 'background:#065f46;color:#34d399';
+  if (v > 0) return 'background:#0f3d2b;color:#86efac';
+  if (v > -2) return 'background:#3d1515;color:#fca5a5';
+  if (v > -5) return 'background:#541a1a;color:#f87171';
+  return 'background:#7f1d1d;color:#fecaca';
+}
+
+// ═══════════════════════════════════════════════════════
+// MODE SWITCH
+// ═══════════════════════════════════════════════════════
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    if (b.textContent.toLowerCase().includes(mode.substring(0,4))) b.classList.add('active');
+  });
+
+  const isInd = mode === 'industrije';
+  document.getElementById('industryPickerCard').style.display = isInd ? 'block' : 'none';
+  document.getElementById('unosTitle').textContent = `Novi unos podataka – ${isInd ? 'industrije' : 'sektori'}`;
+  document.getElementById('rangTitle').textContent = `Rang tablica ${isInd ? 'industrija' : 'sektora'}`;
+  document.getElementById('povijestTitle').textContent = `Svi unosi – ${isInd ? 'industrije' : 'sektori'}`;
+
+  buildSectorGrid();
+  buildItemSelects();
+  updateStats();
+
+  // refresh current tab
+  const activeTab = document.querySelector('.tab-panel.active')?.id?.replace('tab-','');
+  if (activeTab) showTab(activeTab);
+}
+
+// ═══════════════════════════════════════════════════════
+// INDUSTRY PICKER
+// ═══════════════════════════════════════════════════════
+function buildIndustryPicker() {
+  const saved = localStorage.getItem('activeIndustries');
+  activeIndustries = saved ? JSON.parse(saved) : [];
+  renderIndustryPicker();
+}
+
+function renderIndustryPicker(filter = '') {
+  const el = document.getElementById('industryPicker');
+  const f = filter.toLowerCase();
+  el.innerHTML = ALL_INDUSTRIJE
+    .filter(i => !f || i.toLowerCase().includes(f))
+    .map(i => `<div class="ind-chip ${activeIndustries.includes(i) ? 'active' : ''}" onclick="toggleIndustry('${i.replace(/'/g, "\\'")}')">${i}</div>`)
+    .join('');
+  document.getElementById('indCount').textContent = `${activeIndustries.length} odabrano`;
+}
+
+function filterIndustryPicker() {
+  renderIndustryPicker(document.getElementById('indSearchInput').value);
+}
+
+function toggleIndustry(name) {
+  const idx = activeIndustries.indexOf(name);
+  if (idx >= 0) activeIndustries.splice(idx, 1);
+  else activeIndustries.push(name);
+  activeIndustries.sort();
+  localStorage.setItem('activeIndustries', JSON.stringify(activeIndustries));
+  renderIndustryPicker(document.getElementById('indSearchInput')?.value || '');
+  if (currentMode === 'industrije') {
+    buildSectorGrid();
+    buildItemSelects();
+  }
+}
+
+function selectTopIndustries() {
+  const top30 = ['Semiconductors','Software - Application','Software - Infrastructure',
+    'Banks - Regional','Banks - Diversified','Biotechnology','Drug Manufacturers - General',
+    'Oil & Gas E&P','Oil & Gas Integrated','Gold','Aerospace & Defense','Internet Content & Information',
+    'Internet Retail','Auto Manufacturers','Specialty Industrial Machinery','Insurance - Property & Casualty',
+    'Capital Markets','Asset Management','REIT - Industrial','REIT - Residential',
+    'Utilities - Regulated Electric','Solar','Telecom Services','Restaurants',
+    'Home Improvement Retail','Discount Stores','Medical Devices','Railroads',
+    'Residential Construction','Steel'];
+  activeIndustries = [...top30];
+  localStorage.setItem('activeIndustries', JSON.stringify(activeIndustries));
+  renderIndustryPicker();
+  if (currentMode === 'industrije') { buildSectorGrid(); buildItemSelects(); }
+  showToast('Top 30 industrija odabrano');
+}
+
+function clearIndustrySelection() {
+  activeIndustries = [];
+  localStorage.setItem('activeIndustries', JSON.stringify(activeIndustries));
+  renderIndustryPicker();
+  if (currentMode === 'industrije') { buildSectorGrid(); buildItemSelects(); }
+}
+
+function selectAllIndustries() {
+  activeIndustries = [...ALL_INDUSTRIJE];
+  localStorage.setItem('activeIndustries', JSON.stringify(activeIndustries));
+  renderIndustryPicker();
+  if (currentMode === 'industrije') { buildSectorGrid(); buildItemSelects(); }
+  showToast(`Sve industrije odabrane (${ALL_INDUSTRIJE.length})`);
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function init() {
+  document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+  buildIndustryPicker();
+  buildSectorGrid();
+  buildItemSelects();
+  buildAiSettings();
+  bindShortcuts();
+  loadApiKeys();
+  updateStats();
+  updateClock();
+  setInterval(updateClock, 1000);
+  updateWizardModelSelect();
+  updateAiChatModel();
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleDateString('hr-HR') + ' ' + now.toLocaleTimeString('hr-HR');
+}
+
+function buildSectorGrid() {
+  const grid = document.getElementById('sectorGrid');
+  grid.querySelectorAll('.sector-row').forEach(r => r.remove());
+  const items = getItems();
+  if (items.length === 0 && currentMode === 'industrije') {
+    const row = document.createElement('div');
+    row.className = 'sector-row';
+    row.style.gridColumn = '1/-1';
+    row.innerHTML = '<div class="empty-state">Odaberi industrije iz pickera iznad</div>';
+    grid.appendChild(row);
+    return;
+  }
+  items.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'sector-row';
+    row.innerHTML = `<div class="sector-name">${s}</div>` +
+      PERIODI.map(p =>
+        `<div class="sector-input"><input type="number" step="0.01" placeholder="0.00" id="inp_${sanitize(s)}_${p.key}"></div>`
+      ).join('');
+    grid.appendChild(row);
+  });
+}
+
+function buildItemSelects() {
+  const items = getItems();
+  const sel = document.getElementById('sectorSelect');
+  const rsel = document.getElementById('radarSectorSelect');
+  sel.innerHTML = '';
+  rsel.innerHTML = '';
+  items.forEach(s => {
+    sel.appendChild(new Option(s, s, true, true));
+    rsel.appendChild(new Option(s, s));
+  });
+}
+
+function bindShortcuts() {
+  document.addEventListener('keydown', (event) => {
+    const activeUnos = document.getElementById('tab-unos')?.classList.contains('active');
+    if (!activeUnos) return;
+    const typing = event.target?.tagName === 'INPUT' || event.target?.tagName === 'TEXTAREA';
+    const cmdOrCtrl = navigator.platform.toUpperCase().includes('MAC') ? event.metaKey : event.ctrlKey;
+    if (cmdOrCtrl && event.key.toLowerCase() === 's') { event.preventDefault(); saveEntry(); }
+    if (!typing && event.altKey && event.key.toLowerCase() === 'r') { event.preventDefault(); clearForm(); showToast('Forma resetirana'); }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// SAVE / CLEAR
+// ═══════════════════════════════════════════════════════
+function saveEntry() {
+  const date = document.getElementById('inputDate').value;
+  const rawLabel = document.getElementById('inputLabel').value;
+  const label = normalizeLabel(rawLabel);
+  if (!date) { showToast('Odaberi datum!', true); return; }
+  const items = getItems();
+  if (items.length === 0) { showToast('Nema stavki za unos', true); return; }
+
+  const entry = { id: Date.now(), datum: date, label: label || date, sektori: {} };
+  items.forEach(s => {
+    entry.sektori[s] = {};
+    PERIODI.forEach(p => {
+      const val = parseFloat(document.getElementById(`inp_${sanitize(s)}_${p.key}`)?.value);
+      entry.sektori[s][p.key] = isNaN(val) ? null : val;
+    });
+  });
+
+  const data = getData();
+  const idx = data.findIndex(e => e.datum === date);
+  if (idx >= 0) {
+    if (!confirm('Postoji unos za ovaj datum. Zamijeni?')) return;
+    // Merge: keep existing sectors not in current items
+    const merged = { ...data[idx].sektori, ...entry.sektori };
+    entry.sektori = merged;
+    entry.id = data[idx].id;
+    data[idx] = entry;
+  } else {
+    data.push(entry);
+  }
+  data.sort((a,b) => a.datum < b.datum ? -1 : 1);
+  saveData(data);
+  showToast('Unos spremljen!');
+  updateStats();
+  clearForm();
+}
+
+function clearForm() {
+  getItems().forEach(s => {
+    PERIODI.forEach(p => {
+      const el = document.getElementById(`inp_${sanitize(s)}_${p.key}`);
+      if (el) el.value = '';
+    });
+  });
+  document.getElementById('inputLabel').value = '';
+}
+
+function normalizeLabel(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
+}
+
+async function pasteFromClipboard() {
+  let text = '';
+  if (navigator.clipboard?.readText) {
+    try { text = await navigator.clipboard.readText(); } catch(e) {}
+  }
+  if (!text) text = prompt('Zalijepi podatke i potvrdi:') || '';
+  if (!text.trim()) return;
+
+  const items = getItems();
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  let imported = 0, skipped = 0;
+
+  lines.forEach(line => {
+    const item = items.find(s => {
+      const nl = line.toLowerCase().replace(/services/g,'service').replace(/\s+/g,' ');
+      return nl.includes(s.toLowerCase().replace(/services/g,'service').replace(/\s+/g,' '));
+    });
+    if (!item) { skipped++; return; }
+
+    const nums = line.match(/[-+]?\d+(?:[.,]\d+)?%?/g) || [];
+    const parsed = nums.map(n => parseFloat(n.replace('%','').replace(',','.'))).filter(v => Number.isFinite(v) && Math.abs(v) <= 500);
+    if (parsed.length < PERIODI.length) { skipped++; return; }
+    const values = parsed.slice(-PERIODI.length);
+
+    PERIODI.forEach((p, i) => {
+      const el = document.getElementById(`inp_${sanitize(item)}_${p.key}`);
+      if (el) el.value = values[i].toFixed(2);
+    });
+    imported++;
+  });
+
+  const warn = skipped > 0 ? ` (preskočeno: ${skipped})` : '';
+  showToast(`Uvezeno ${imported} stavki${warn}`);
+}
+
+// ═══════════════════════════════════════════════════════
+// SMART PASTE – parses entire Finviz table from clipboard
+// Finviz Performance tab (v=140) columns:
+//   No. | Name | Market Cap | Perf Week | Perf Month | Perf Quart | Perf Half | Perf Year | Perf YTD | Avg Volume | Rel Volume | Change | Volume
+// Finviz Overview tab (v=110) columns:
+//   No. | Name | Market Cap | P/E | Forward P/E | PEG | P/S | P/B | P/C | P/FCF | Dividend | EPS ... | Recom | Avg Volume | Rel Volume | Change | Volume
+// ═══════════════════════════════════════════════════════
+async function smartPasteFinviz() {
+  let text = '';
+  if (navigator.clipboard?.readText) {
+    try { text = await navigator.clipboard.readText(); } catch(e) {}
+  }
+  if (!text) text = prompt('Zalijepi cijeli sadržaj Finviz tablice (Ctrl+A → Ctrl+C sa stranice):') || '';
+  if (!text.trim()) return;
+
+  // Reference list
+  const allKnown = [...SEKTORI, ...ALL_INDUSTRIJE];
+
+  // ── Step 1: Detect column layout from header row ──
+  // Finviz headers: "No." "Name" "Market Cap" "Perf Week" "Perf Month" "Perf Quart" "Perf Half" "Perf Year" "Perf YTD" ...
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // Map Finviz column names to our period keys
+  const FINVIZ_COL_MAP = {
+    'perf week':  'tjedno',
+    'perf month': 'miesecno',
+    'perf quart': 'tromj',
+    'perf half':  'polugod',
+    'perf year':  'godisnje',
+    'perf ytd':   'ytd',
+    // Alternate forms
+    'week':       'tjedno',
+    'month':      'miesecno',
+    'quarter':    'tromj',
+    'quart':      'tromj',
+    'half':       'polugod',
+    'half year':  'polugod',
+    'year':       'godisnje',
+    'ytd':        'ytd',
+    '1w':         'tjedno',
+    '1m':         'miesecno',
+    '3m':         'tromj',
+    '6m':         'polugod',
+    '1y':         'godisnje',
+  };
+
+  // Try tab-separated first, then multi-space
+  let separator = '\t';
+  let headerLine = lines.find(l =>
+    l.toLowerCase().includes('perf week') || l.toLowerCase().includes('perf month') ||
+    (l.toLowerCase().includes('name') && l.toLowerCase().includes('week'))
+  );
+
+  let columnIndices = null; // { tjedno: colIdx, miesecno: colIdx, ... }
+  let nameColIdx = -1;
+
+  if (headerLine) {
+    // Split header by tabs or multiple spaces
+    let cols = headerLine.split('\t').map(c => c.trim().toLowerCase());
+    if (cols.length < 4) {
+      cols = headerLine.split(/\s{2,}/).map(c => c.trim().toLowerCase());
+      separator = /\s{2,}/;
+    }
+
+    columnIndices = {};
+    cols.forEach((col, idx) => {
+      if (col === 'name' || col === 'group') nameColIdx = idx;
+      const mapped = FINVIZ_COL_MAP[col];
+      if (mapped) columnIndices[mapped] = idx;
+    });
+
+    // If we found at least 3 performance columns, we have a valid header
+    if (Object.keys(columnIndices).length < 3) columnIndices = null;
+  }
+
+  // ── Step 2: Parse data rows ──
+  const parsedRows = [];
+  let skipped = 0;
+
+  for (const line of lines) {
+    // Skip header-like lines
+    if (line.toLowerCase().includes('perf week') || line.toLowerCase().includes('perf month')) continue;
+    if (/^no\.?\s/i.test(line)) continue;
+
+    // Match item name
+    const matchedItem = matchKnownItem(line, allKnown);
+    if (!matchedItem) { skipped++; continue; }
+
+    let values = {};
+
+    if (columnIndices) {
+      // ── Column-aware parsing (header detected) ──
+      let cells = line.split('\t').map(c => c.trim());
+      if (cells.length < 4) cells = line.split(separator).map(c => c.trim());
+
+      for (const [periodKey, colIdx] of Object.entries(columnIndices)) {
+        if (colIdx < cells.length) {
+          const raw = cells[colIdx].replace('%', '').replace(',', '.').trim();
+          const num = parseFloat(raw);
+          if (Number.isFinite(num) && Math.abs(num) <= 500) {
+            values[periodKey] = num;
+          }
+        }
+      }
+    } else {
+      // ── Fallback: positional parsing with Finviz heuristics ──
+      // Extract ALL numbers from the line
+      const allNums = [];
+      const regex = /[-+]?\d+(?:[.,]\d+)?%?/g;
+      let m;
+      while ((m = regex.exec(line)) !== null) {
+        const num = parseFloat(m[0].replace('%', '').replace(',', '.'));
+        if (Number.isFinite(num)) {
+          allNums.push({ val: num, pos: m.index });
+        }
+      }
+
+      // Filter out the row number (first number, typically 1-200, integer, at start)
+      let nums = [...allNums];
+      if (nums.length > 0 && nums[0].pos < 5 && Number.isInteger(nums[0].val) && nums[0].val > 0 && nums[0].val <= 300) {
+        nums.shift(); // Remove row number
+      }
+
+      // Finviz Performance view has this pattern after Name:
+      // [Market Cap as text like "2.50T"] [Perf Week] [Perf Month] [Perf Quart] [Perf Half] [Perf Year] [Perf YTD] [Avg Vol] [Rel Vol] [Change] [Volume]
+      // The 6 performance numbers are typically % values between -100 and +100
+      // Market Cap might parse as a number (e.g., "2.50" from "2.50T")
+      // Avg Volume is usually a very large number (millions)
+      // We need the 6 consecutive % values
+
+      // Strategy: find the longest run of "small" numbers (likely percentages, |v| < 200)
+      // that's at least 6 long, and take the first 6
+      const perfNums = nums.filter(n => Math.abs(n.val) <= 200);
+
+      if (perfNums.length >= 6) {
+        // The 6 performance columns in order
+        const keys = ['tjedno', 'miesecno', 'tromj', 'polugod', 'godisnje', 'ytd'];
+        // If there are exactly 6-8 "small" numbers, first 6 are likely perf
+        // If more, try to skip market cap (first small num might be market cap partial)
+        let perfSlice;
+        if (perfNums.length === 6) {
+          perfSlice = perfNums;
+        } else if (perfNums.length >= 7) {
+          // Check if first number looks like market cap fragment (single digit or > 50)
+          // Performance values are rarely > 50% for weekly
+          // Skip until we find a pattern that looks like perf data
+          // Heuristic: the 6 perf numbers come before the volume numbers
+          // Volume numbers are typically > 1000 (thousands)
+          // Take the first 6 that are < 200 and skip any that are clearly volume
+          perfSlice = perfNums.slice(0, 6);
+
+          // Validate: if first number seems too large for weekly perf, might be market cap
+          if (Math.abs(perfSlice[0].val) > 80) {
+            perfSlice = perfNums.slice(1, 7);
+          }
+        }
+
+        if (perfSlice && perfSlice.length >= 6) {
+          keys.forEach((k, i) => {
+            if (i < perfSlice.length) values[k] = perfSlice[i].val;
+          });
+        }
+      }
+    }
+
+    // Only accept if we got at least 3 period values
+    if (Object.keys(values).length >= 3) {
+      parsedRows.push({ name: matchedItem, values });
+    } else {
+      skipped++;
+    }
+  }
+
+  if (parsedRows.length === 0) {
+    showToast('Nisam prepoznao format. Idi na Finviz → Performance tab → označi tablicu → kopiraj.', true);
+    return;
+  }
+
+  // ── Step 3: Auto-detect mode ──
+  const sectorMatches = parsedRows.filter(r => SEKTORI.includes(r.name)).length;
+  const industryMatches = parsedRows.filter(r => ALL_INDUSTRIJE.includes(r.name)).length;
+
+  if (industryMatches > sectorMatches && currentMode === 'sektori') {
+    if (confirm(`Prepoznato ${industryMatches} industrija. Prebaciti na industrije mod?`)) setMode('industrije');
+  } else if (sectorMatches > industryMatches && currentMode === 'industrije') {
+    if (confirm(`Prepoznato ${sectorMatches} sektora. Prebaciti na sektore mod?`)) setMode('sektori');
+  }
+
+  // ── Step 4: Auto-add industries to picker ──
+  let autoAdded = 0;
+  if (currentMode === 'industrije') {
+    const newIndustries = parsedRows
+      .filter(r => ALL_INDUSTRIJE.includes(r.name) && !activeIndustries.includes(r.name))
+      .map(r => r.name);
+    if (newIndustries.length > 0) {
+      activeIndustries = [...new Set([...activeIndustries, ...newIndustries])].sort();
+      localStorage.setItem('activeIndustries', JSON.stringify(activeIndustries));
+      autoAdded = newIndustries.length;
+      renderIndustryPicker();
+      buildSectorGrid();
+      buildItemSelects();
+    }
+  }
+
+  // ── Step 5: Fill form ──
+  let imported = 0;
+  const currentItems = getItems();
+  parsedRows.forEach(row => {
+    if (!currentItems.includes(row.name)) return;
+    PERIODI.forEach(p => {
+      const el = document.getElementById(`inp_${sanitize(row.name)}_${p.key}`);
+      if (el && row.values[p.key] !== undefined) {
+        el.value = row.values[p.key].toFixed(2);
+      }
+    });
+    imported++;
+  });
+
+  let msg = `Smart Paste: ${imported} stavki uvezeno`;
+  if (autoAdded > 0) msg += `, ${autoAdded} novih industrija dodano`;
+  if (skipped > 0) msg += ` (${skipped} preskočeno)`;
+  showToast(msg);
+}
+
+// Match a line to a known sector/industry name (longest match wins)
+function matchKnownItem(line, allKnown) {
+  const nl = line.toLowerCase().replace(/\s+/g, ' ').trim();
+  let best = null;
+  let bestLen = 0;
+  for (const item of allKnown) {
+    const ni = item.toLowerCase();
+    // Check if the name appears in the line (handle "Services" vs "Service" etc.)
+    const variants = [ni, ni.replace(/services/g, 'service')];
+    for (const v of variants) {
+      if (nl.includes(v) && v.length > bestLen) {
+        best = item;
+        bestLen = v.length;
+      }
+    }
+  }
+  return best;
+}
+
+// ═══════════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════════
+function updateStats() {
+  const data = getData();
+  const row = document.getElementById('statsRow');
+  const items = getItems();
+  if (data.length === 0 || items.length === 0) { row.innerHTML = ''; return; }
+
+  const last = data[data.length - 1];
+  const best = items.reduce((a,b) =>
+    (last.sektori[a]?.tjedno ?? -999) > (last.sektori[b]?.tjedno ?? -999) ? a : b);
+  const worst = items.reduce((a,b) =>
+    (last.sektori[a]?.tjedno ?? 999) < (last.sektori[b]?.tjedno ?? 999) ? a : b);
+
+  row.innerHTML = `
+    <div class="stat-card"><div class="stat-value">${data.length}</div><div class="stat-label">Tjednih unosa</div></div>
+    <div class="stat-card"><div class="stat-value text-amber">${last.datum}</div><div class="stat-label">Zadnji unos</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--green);font-size:15px">${best}</div><div class="stat-label">Lider (${pct(last.sektori[best]?.tjedno)})</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--red);font-size:15px">${worst}</div><div class="stat-label">Autsajder (${pct(last.sektori[worst]?.tjedno)})</div></div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+// RANK TABLE
+// ═══════════════════════════════════════════════════════
+function populateWeekSelect() {
+  const data = getData();
+  const sel = document.getElementById('weekSelect');
+  sel.innerHTML = '';
+  [...data].reverse().forEach(e => {
+    sel.appendChild(new Option(`${e.datum}  ${e.label !== e.datum ? '– ' + e.label : ''}`, e.id));
+  });
+}
+
+function renderRankTable() {
+  const data = getData();
+  const items = getItems();
+  const id = parseInt(document.getElementById('weekSelect').value);
+  const entry = data.find(e => e.id === id);
+  if (!entry || items.length === 0) {
+    document.getElementById('rankBody').innerHTML = '<tr><td colspan="7" class="empty-state">Nema podataka</td></tr>';
+    return;
+  }
+
+  let rows = items.filter(s => entry.sektori[s]).map(s => ({
+    sektor: s, tjedno: entry.sektori[s]?.tjedno ?? null,
+    miesecno: entry.sektori[s]?.miesecno ?? null, tromj: entry.sektori[s]?.tromj ?? null,
+    polugod: entry.sektori[s]?.polugod ?? null, godisnje: entry.sektori[s]?.godisnje ?? null,
+    ytd: entry.sektori[s]?.ytd ?? null,
+  }));
+
+  rows.sort((a,b) => {
+    const va = a[sortRankBy] ?? -9999;
+    const vb = b[sortRankBy] ?? -9999;
+    return sortDir * (va - vb);
+  });
+
+  const ranked = [...rows].sort((a,b) => (b.tjedno??-9999) - (a.tjedno??-9999));
+  const rankMap = {};
+  ranked.forEach((r,i) => rankMap[r.sektor] = i+1);
+
+  const isSignal = r => {
+    const sTj = parseFloat(document.getElementById('sigTjedno')?.value ?? 1.5);
+    const sMj = parseFloat(document.getElementById('sigMjesecno')?.value ?? 0);
+    const sGod = parseFloat(document.getElementById('sigGodisnje')?.value ?? -5);
+    return (r.tjedno ?? 0) >= sTj && (r.miesecno ?? 0) >= sMj && ((r.godisnje ?? 0) <= sGod || (r.polugod ?? 0) <= sGod);
+  };
+
+  document.getElementById('rankBody').innerHTML = rows.map(r => {
+    const rk = rankMap[r.sektor];
+    const rkBadge = rk <= 3 ? `<span class="rank rank-${rk}">${rk}</span>` : `<span style="color:var(--text-dim);font-size:11px;margin-right:8px">${rk}</span>`;
+    const signal = isSignal(r) ? '<span class="signal-badge">⚡ SIGNAL</span>' : '';
+    return `<tr class="${isSignal(r) ? 'signal-row' : ''}">
+      <td>${rkBadge}${r.sektor}${signal}</td>
+      <td>${valCell(r.tjedno)}</td><td>${valCell(r.miesecno)}</td>
+      <td>${valCell(r.tromj)}</td><td>${valCell(r.polugod)}</td>
+      <td>${valCell(r.godisnje)}</td><td>${valCell(r.ytd)}</td></tr>`;
+  }).join('');
+
+  document.querySelectorAll('[id^=sa-]').forEach(el => el.textContent = '');
+  const el = document.getElementById(`sa-${sortRankBy}`);
+  if (el) el.textContent = sortDir === 1 ? '↑' : '↓';
+
+  renderHeatmap(entry);
+}
+
+function rankSort(col) {
+  if (sortRankBy === col) sortDir *= -1;
+  else { sortRankBy = col; sortDir = -1; }
+  renderRankTable();
+}
+
+function setHmSort(mode) {
+  hmSortMode = mode;
+  // Re-render with current entry
+  const data = getData();
+  const id = parseInt(document.getElementById('weekSelect')?.value);
+  const entry = data.find(e => e.id === id) || data[data.length - 1];
+  if (entry) renderHeatmap(entry);
+}
+
+function renderHeatmap(entry) {
+  const items = getItems().filter(s => entry.sektori[s]);
+  if (items.length === 0) return;
+
+  // Build sortable data
+  let rows = items.map(s => {
+    const sec = entry.sektori[s] || {};
+    const vals = PERIODI.map(p => sec[p.key] ?? null);
+    const validVals = vals.filter(v => v !== null);
+    const tj = sec.tjedno ?? 0, god = sec.godisnje ?? 0, pol = sec.polugod ?? 0;
+    return {
+      name: s, vals, sec,
+      momentum: tj - god,
+      reversal: (tj > 0 ? tj : 0) + Math.abs(Math.min(god, pol, 0)),
+      dispersion: validVals.length > 1 ? Math.max(...validVals) - Math.min(...validVals) : 0
+    };
+  });
+
+  // Sort
+  const periodIdx = { tjedno:0, miesecno:1, tromj:2, polugod:3, godisnje:4, ytd:5 };
+  if (hmSortMode === 'name') rows.sort((a,b) => a.name.localeCompare(b.name));
+  else if (periodIdx[hmSortMode] !== undefined) {
+    const i = periodIdx[hmSortMode];
+    rows.sort((a,b) => (b.vals[i] ?? -999) - (a.vals[i] ?? -999));
+  }
+  else if (hmSortMode === 'momentum') rows.sort((a,b) => b.momentum - a.momentum);
+  else if (hmSortMode === 'reversal') rows.sort((a,b) => b.reversal - a.reversal);
+  else if (hmSortMode === 'dispersion') rows.sort((a,b) => b.dispersion - a.dispersion);
+
+  // Extra columns for computed sorts
+  const showExtra = ['momentum','reversal','dispersion'].includes(hmSortMode);
+  const extraLabel = hmSortMode === 'momentum' ? 'Mom.' : hmSortMode === 'reversal' ? 'Rev.' : 'Disp.';
+  const cols = PERIODI.length + (showExtra ? 1 : 0);
+
+  const hm = document.getElementById('heatmap');
+  hm.style.gridTemplateColumns = `200px repeat(${cols}, 1fr)`;
+
+  let html = '<div class="hm-header" style="text-align:left">Naziv</div>';
+  PERIODI.forEach(p => html += `<div class="hm-header">${p.label}</div>`);
+  if (showExtra) html += `<div class="hm-header" style="color:var(--amber)">${extraLabel}</div>`;
+
+  rows.forEach(r => {
+    html += `<div class="hm-label">${r.name}</div>`;
+    PERIODI.forEach((p, i) => {
+      const v = r.vals[i];
+      html += `<div class="hm-cell" style="${hmColor(v)}" title="${p.label}: ${pct(v)}">${pct(v)}</div>`;
+    });
+    if (showExtra) {
+      const ev = r[hmSortMode];
+      const ec = ev > 5 ? 'color:var(--green)' : ev > 0 ? 'color:var(--cyan)' : 'color:var(--red)';
+      html += `<div class="hm-cell" style="background:var(--bg4);${ec};font-weight:700" title="${extraLabel}: ${ev.toFixed(1)}">${ev.toFixed(1)}</div>`;
+    }
+  });
+  hm.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════
+const COLORS = [
+  '#f59e0b','#38bdf8','#22d3a0','#f43f5e','#a78bfa',
+  '#fb923c','#67e8f9','#86efac','#fda4af','#c4b5fd',
+  '#fde68a','#6ee7b7','#f87171','#818cf8','#fbbf24',
+  '#22d3ee','#fb7185','#a3e635','#e879f9','#fdba74',
+  '#34d399','#60a5fa','#facc15','#f472b6','#2dd4bf',
+  '#c084fc','#4ade80','#38bdf8','#e11d48','#8b5cf6'
+];
+
+function selectAllItems() {
+  const sel = document.getElementById('sectorSelect');
+  for (let o of sel.options) o.selected = true;
+  renderCharts();
+}
+
+function renderCharts() {
+  const data = getData();
+  if (data.length === 0) return;
+
+  const sel = document.getElementById('sectorSelect');
+  const chosen = Array.from(sel.selectedOptions).map(o => o.value);
+  const labels = data.map(e => e.datum.slice(5));
+
+  Object.values(charts).forEach(c => c?.destroy());
+  charts = {};
+
+  // 1. Trend line
+  charts.trend = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: chosen.map((s,i) => ({
+        label: s, data: data.map(e => e.sektori[s]?.[vizPeriod] ?? null),
+        borderColor: COLORS[i % COLORS.length], backgroundColor: 'transparent',
+        borderWidth: 2, pointRadius: 3, spanGaps: true, tension: 0.3
+      }))
+    },
+    options: chartOpts(`Performansa – ${PERIODI.find(p=>p.key===vizPeriod)?.label}`)
+  });
+
+  // 2. Bar chart
+  const last = data[data.length - 1];
+  const items = getItems().filter(s => last.sektori[s]);
+  const barVals = items.map(s => last.sektori[s]?.[vizPeriod] ?? 0);
+  charts.bar = new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: items.map(s => s.length > 18 ? s.substring(0,16)+'…' : s),
+      datasets: [{
+        data: barVals,
+        backgroundColor: barVals.map(v => v >= 0 ? 'rgba(34,211,160,0.7)' : 'rgba(244,63,94,0.7)'),
+        borderColor: barVals.map(v => v >= 0 ? '#22d3a0' : '#f43f5e'), borderWidth: 1
+      }]
+    },
+    options: barOpts()
+  });
+
+  // 3. Dispersion chart (spread between best & worst per week)
+  if (data.length >= 2) {
+    const dispData = data.map(e => {
+      const vals = items.map(s => e.sektori[s]?.[vizPeriod] ?? null).filter(v => v !== null);
+      if (vals.length < 2) return { best: 0, worst: 0, spread: 0 };
+      return { best: Math.max(...vals), worst: Math.min(...vals), spread: Math.max(...vals) - Math.min(...vals) };
+    });
+    charts.dispersion = new Chart(document.getElementById('dispersionChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Najbolji', data: dispData.map(d => d.best), borderColor: '#22d3a0', backgroundColor: 'rgba(34,211,160,0.1)', fill: '+1', borderWidth: 2, pointRadius: 2, tension: 0.3 },
+          { label: 'Najgori', data: dispData.map(d => d.worst), borderColor: '#f43f5e', backgroundColor: 'rgba(244,63,94,0.1)', borderWidth: 2, pointRadius: 2, tension: 0.3 },
+          { label: 'Spread', data: dispData.map(d => d.spread), borderColor: '#f59e0b', borderDash: [5,5], backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: 0.3 }
+        ]
+      },
+      options: chartOpts('Disperzija')
+    });
+  }
+
+  // 4. Breadth chart (% positive per week)
+  if (data.length >= 2) {
+    const breadthData = data.map(e => {
+      const vals = items.map(s => e.sektori[s]?.[vizPeriod] ?? null).filter(v => v !== null);
+      if (vals.length === 0) return 50;
+      return (vals.filter(v => v > 0).length / vals.length) * 100;
+    });
+    charts.breadth = new Chart(document.getElementById('breadthChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: '% pozitivnih', data: breadthData,
+          borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)',
+          fill: true, borderWidth: 2, pointRadius: 3, tension: 0.3
+        }]
+      },
+      options: {
+        ...chartOpts('Breadth'),
+        scales: {
+          ...chartOpts('').scales,
+          y: { ...chartOpts('').scales.y, min: 0, max: 100,
+            ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 }, callback: v => v + '%' }
+          }
+        },
+        plugins: {
+          ...chartOpts('').plugins,
+          annotation: {
+            annotations: { line50: { type: 'line', yMin: 50, yMax: 50, borderColor: 'rgba(255,255,255,0.15)', borderDash: [5,5] }}
+          }
+        }
+      }
+    });
+  }
+
+  // 5. Momentum score bar (weekly minus yearly) for last week
+  const momData = items.map(s => ({
+    name: s.length > 16 ? s.substring(0,14)+'…' : s,
+    score: (last.sektori[s]?.tjedno ?? 0) - (last.sektori[s]?.godisnje ?? 0)
+  })).sort((a,b) => b.score - a.score);
+
+  charts.momentum = new Chart(document.getElementById('momentumChart'), {
+    type: 'bar',
+    data: {
+      labels: momData.map(d => d.name),
+      datasets: [{
+        label: 'Momentum Score (tj−god)', data: momData.map(d => d.score),
+        backgroundColor: momData.map(d => d.score >= 5 ? 'rgba(34,211,160,0.8)' : d.score >= 0 ? 'rgba(56,189,248,0.6)' : d.score >= -5 ? 'rgba(251,146,60,0.6)' : 'rgba(244,63,94,0.7)'),
+        borderWidth: 0
+      }]
+    },
+    options: { ...barOpts(), indexAxis: items.length > 15 ? 'y' : 'x' }
+  });
+
+  renderRadar();
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART EXPAND MODAL
+// ═══════════════════════════════════════════════════════
+let modalChart = null;
+let lastExpandedChartId = null;
+
+function expandChart(chartId) {
+  const sourceChart = charts[chartId.replace('Chart','')];
+  if (!sourceChart) return;
+
+  lastExpandedChartId = chartId;
+  const modal = document.getElementById('chartModal');
+  modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+
+  if (modalChart) modalChart.destroy();
+
+  // Clone config from source chart
+  const config = sourceChart.config;
+  const newConfig = JSON.parse(JSON.stringify({
+    type: config.type,
+    data: config.data,
+    options: config.options
+  }));
+  // Fix function callbacks lost in JSON.parse
+  if (newConfig.options?.scales?.y?.ticks) newConfig.options.scales.y.ticks.callback = v => v + '%';
+  if (newConfig.options?.scales?.x?.ticks) newConfig.options.scales.x.ticks.maxRotation = 45;
+  if (newConfig.options?.plugins?.tooltip?.callbacks) {
+    newConfig.options.plugins.tooltip.callbacks.label = ctx => ` ${ctx.dataset.label}: ${ctx.raw?.toFixed?.(2) ?? ctx.raw}%`;
+  }
+  // Bigger fonts for modal
+  if (newConfig.options?.plugins?.legend?.labels) newConfig.options.plugins.legend.labels.font = { family: 'JetBrains Mono', size: 12 };
+
+  modalChart = new Chart(document.getElementById('modalChart'), newConfig);
+}
+
+function closeChartModal() {
+  document.getElementById('chartModal').style.display = 'none';
+  document.body.style.overflow = '';
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+}
+
+// ESC to close modal
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChartModal(); });
+
+function renderRadar() {
+  const data = getData();
+  if (data.length === 0) return;
+  const last = data[data.length - 1];
+  const s = document.getElementById('radarSectorSelect').value;
+  if (!s || !last.sektori[s]) return;
+  if (charts.radar) charts.radar.destroy();
+  charts.radar = new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: {
+      labels: PERIODI.map(p => p.label),
+      datasets: [{ label: s, data: PERIODI.map(p => last.sektori[s]?.[p.key] ?? 0),
+        borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.15)',
+        pointBackgroundColor: '#f59e0b', borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 11 }}}},
+      scales: { r: { grid: { color: '#1e2a38' }, angleLines: { color: '#1e2a38' },
+        ticks: { color: '#475569', backdropColor: 'transparent', font: { size: 10 }},
+        pointLabels: { color: '#94a3b8', font: { size: 11, family: 'JetBrains Mono' }}}}
+    }
+  });
+}
+
+function setVizPeriod(p, el) {
+  vizPeriod = p;
+  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderCharts();
+}
+
+function chartOpts(title) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 }, boxWidth: 12 }},
+      tooltip: { backgroundColor: '#161e28', borderColor: '#1e2a38', borderWidth: 1,
+        titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+        bodyFont: { family: 'JetBrains Mono', size: 12 },
+        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw?.toFixed(2) ?? 'N/A'}%` }}
+    },
+    scales: {
+      x: { grid: { color: '#1e2a38' }, ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 }}},
+      y: { grid: { color: '#1e2a38' }, ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 }, callback: v => v + '%' }}
+    }
+  };
+}
+function barOpts() {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+      tooltip: { backgroundColor: '#161e28', borderColor: '#1e2a38', borderWidth: 1,
+        callbacks: { label: ctx => ` ${ctx.raw?.toFixed(2)}%` }}},
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 8 }, maxRotation: 90 }},
+      y: { grid: { color: '#1e2a38' }, ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 }, callback: v => v + '%' }}
+    }
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// SIGNALS
+// ═══════════════════════════════════════════════════════
+function applySignalPreset(type) {
+  const presets = {
+    bounce:     { tjedno: 2, miesecno: -1, godisnje: -10, tromj: '', polugod: '', momentum: '' },
+    turnaround: { tjedno: 1, miesecno: 0, godisnje: -15, tromj: '', polugod: -10, momentum: 5 },
+    momentum:   { tjedno: 1.5, miesecno: 0, godisnje: '', tromj: '', polugod: '', momentum: 8 },
+    exhaustion: { tjedno: -0.5, miesecno: -3, godisnje: -20, tromj: -8, polugod: -12, momentum: '' },
+    strength:   { tjedno: 1, miesecno: 2, godisnje: 10, tromj: 3, polugod: 5, momentum: '' },
+    weakness:   { tjedno: -1, miesecno: 1, godisnje: 15, tromj: 2, polugod: 5, momentum: '' }
+  };
+  const p = presets[type] || {};
+  document.getElementById('sigTjedno').value = p.tjedno ?? '';
+  document.getElementById('sigMjesecno').value = p.miesecno ?? '';
+  document.getElementById('sigGodisnje').value = p.godisnje ?? '';
+  document.getElementById('sigTromj').value = p.tromj ?? '';
+  document.getElementById('sigPolugod').value = p.polugod ?? '';
+  document.getElementById('sigMomentum').value = p.momentum ?? '';
+  renderSignals();
+}
+
+function renderSignals() {
+  const data = getData();
+  const items = getItems();
+  if (data.length === 0 || items.length === 0) {
+    document.getElementById('signalOutput').innerHTML = '<div class="empty-state">Nema podataka</div>';
+    document.getElementById('turnaroundOutput').innerHTML = '';
+    return;
+  }
+
+  const val = id => { const v = parseFloat(document.getElementById(id)?.value); return isNaN(v) ? null : v; };
+  const sTj = val('sigTjedno'), sMj = val('sigMjesecno'), sGod = val('sigGodisnje');
+  const sTr = val('sigTromj'), sPol = val('sigPolugod'), sMom = val('sigMomentum');
+
+  const last = data[data.length - 1];
+  const signals = [];
+
+  items.forEach(s => {
+    const sec = last.sektori[s];
+    if (!sec) return;
+    const tj = sec.tjedno ?? 0, mj = sec.miesecno ?? 0, god = sec.godisnje ?? 0;
+    const pol = sec.polugod ?? 0, tromj = sec.tromj ?? 0, ytd = sec.ytd ?? 0;
+    const mom = tj - god;
+
+    let match = true;
+    // Basic filters — if positive threshold → value must be >= threshold; if negative → value must be <=
+    if (sTj !== null && tj < sTj) match = false;
+    if (sMj !== null) { if (sMj >= 0 && mj < sMj) match = false; if (sMj < 0 && mj > sMj) match = false; }
+    if (sGod !== null) { if (sGod >= 0 && god < sGod) match = false; if (sGod < 0 && god > sGod) match = false; }
+    if (sTr !== null) { if (sTr >= 0 && tromj < sTr) match = false; if (sTr < 0 && tromj > sTr) match = false; }
+    if (sPol !== null) { if (sPol >= 0 && pol < sPol) match = false; if (sPol < 0 && pol > sPol) match = false; }
+    if (sMom !== null && mom < sMom) match = false;
+
+    if (match) signals.push({ sektor: s, tj, mj, god, pol, ytd, tromj, mom });
+  });
+
+  // Sort by momentum score desc
+  signals.sort((a,b) => b.mom - a.mom);
+
+  const out = document.getElementById('signalOutput');
+  if (signals.length === 0) {
+    out.innerHTML = '<div class="empty-state" style="color:var(--green)">✓ Nema signala za zadane parametre</div>';
+  } else {
+    out.innerHTML = signals.map(sig => `
+      <div style="background:var(--signal-bg);border:1px solid rgba(251,146,60,0.2);border-radius:6px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <span style="color:var(--signal);font-size:18px;font-weight:700">${sig.sektor}</span>
+          <span class="signal-badge">⚡ SIGNAL</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan)">Mom: ${sig.mom.toFixed(1)}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;font-family:'JetBrains Mono',monospace;font-size:12px">
+          ${[['tj','TJEDNO'],['mj','MJES.'],['tromj','3MJ.'],['pol','6MJ.'],['god','GOD.'],['ytd','YTD'],['mom','MOM.']].map(([k,l]) => {
+            const v = sig[k];
+            return `<div><div style="color:var(--text-dim);font-size:10px;margin-bottom:2px">${l}</div><div style="color:${v>=0?'var(--green)':'var(--red)'}">${v>=0?'+':''}${v.toFixed(2)}${k==='mom'?'':'%'}</div></div>`;
+          }).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Turnaround section (always render) ──
+  renderTurnaroundCandidates(last, items);
+  renderConsistency(data);
+}
+
+function renderTurnaroundCandidates(entry, items) {
+  const candidates = items.map(s => {
+    const sec = entry.sektori[s];
+    if (!sec) return null;
+    const tj = sec.tjedno ?? 0, mj = sec.miesecno ?? 0, god = sec.godisnje ?? 0, pol = sec.polugod ?? 0;
+    const longTermPain = Math.min(god, pol);
+    const shortTermGain = tj;
+    const score = shortTermGain - longTermPain;
+    return { name: s, tj, mj, tromj: sec.tromj ?? 0, pol, god, ytd: sec.ytd ?? 0, longTermPain, shortTermGain, score };
+  }).filter(c => c && c.longTermPain < -5 && c.shortTermGain > 0)
+    .sort((a,b) => b.score - a.score);
+
+  const out = document.getElementById('turnaroundOutput');
+  if (candidates.length === 0) {
+    out.innerHTML = '<div class="empty-state" style="color:var(--text-dim)">Nema turnaround kandidata (potreban: god. ili 6mj. < -5% i tj. > 0%)</div>';
+    return;
+  }
+
+  out.innerHTML = `<div class="table-wrapper"><table>
+    <thead><tr>
+      <th style="text-align:left">Naziv</th><th>Tjedno</th><th>Mjes.</th><th>3 Mjes.</th><th>6 Mjes.</th><th>God.</th><th>YTD</th><th style="color:var(--amber)">T-Score</th>
+    </tr></thead><tbody>
+    ${candidates.map(c => {
+      const sc = c.score;
+      const scColor = sc > 15 ? 'var(--green)' : sc > 8 ? 'var(--cyan)' : 'var(--amber)';
+      return `<tr>
+        <td>${c.name}</td>
+        <td>${valCell(c.tj)}</td><td>${valCell(c.mj)}</td><td>${valCell(c.tromj)}</td>
+        <td>${valCell(c.pol)}</td><td>${valCell(c.god)}</td><td>${valCell(c.ytd)}</td>
+        <td style="color:${scColor};font-weight:700;text-align:right">${sc.toFixed(1)}</td>
+      </tr>`;
+    }).join('')}
+  </tbody></table></div>
+  <div style="font-size:11px;color:var(--text-dim);margin-top:8px;font-family:'JetBrains Mono',monospace">
+    T-Score = kratkoročni rast − dugoročni pad. Viši score = jači turnaround signal. Stavke sortirane po T-Score desc.
+  </div>`;
+}
+
+function renderConsistency(data) {
+  const items = getItems();
+  const last4 = data.slice(-4);
+  if (last4.length < 2 || items.length === 0) return;
+
+  document.getElementById('consistencyBody').innerHTML = items.map(s => {
+    const getRanks = (key) => last4.map(e => {
+      const vals = items.map(x => e.sektori[x]?.[key] ?? -9999).sort((a,b) => b-a);
+      return vals.indexOf(e.sektori[s]?.[key] ?? -9999) + 1;
+    });
+    const tjR = getRanks('tjedno'), mjR = getRanks('miesecno'), tR = getRanks('tromj');
+    const trend = tjR.length >= 2
+      ? tjR[tjR.length-1] < tjR[0] ? '↑ raste' : tjR[tjR.length-1] > tjR[0] ? '↓ pada' : '→ stabilno' : '–';
+    const tColor = trend.includes('raste') ? 'var(--green)' : trend.includes('pada') ? 'var(--red)' : 'var(--text-dim)';
+    return `<tr><td>${s}</td><td>${avg(tjR).toFixed(1)}</td><td>${avg(mjR).toFixed(1)}</td><td>${avg(tR).toFixed(1)}</td><td style="color:${tColor};font-weight:600">${trend}</td></tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// YOY COMPARISON
+// ═══════════════════════════════════════════════════════
+function populateYoYSelects() {
+  const data = getData();
+  const cur = document.getElementById('yoyCurrentWeek');
+  const past = document.getElementById('yoyPastWeek');
+  cur.innerHTML = '';
+  past.innerHTML = '';
+  [...data].reverse().forEach(e => {
+    cur.appendChild(new Option(e.datum + (e.label !== e.datum ? ' – ' + e.label : ''), e.id));
+    past.appendChild(new Option(e.datum + (e.label !== e.datum ? ' – ' + e.label : ''), e.id));
+  });
+  // Try to auto-select: current = last, past = ~52 weeks ago
+  if (data.length >= 2) {
+    cur.value = data[data.length - 1].id;
+    const lastDate = new Date(data[data.length - 1].datum);
+    const yearAgo = new Date(lastDate);
+    yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+    const closest = data.reduce((best, e) => {
+      const diff = Math.abs(new Date(e.datum) - yearAgo);
+      return diff < Math.abs(new Date(best.datum) - yearAgo) ? e : best;
+    });
+    if (closest && closest.id !== data[data.length - 1].id) {
+      past.value = closest.id;
+    } else if (data.length >= 2) {
+      past.value = data[0].id;
+    }
+  }
+}
+
+function renderYoY() {
+  const data = getData();
+  const items = getItems();
+  const curId = parseInt(document.getElementById('yoyCurrentWeek').value);
+  const pastId = parseInt(document.getElementById('yoyPastWeek').value);
+  const period = document.getElementById('yoyPeriod').value;
+  const curEntry = data.find(e => e.id === curId);
+  const pastEntry = data.find(e => e.id === pastId);
+
+  if (!curEntry || !pastEntry || items.length === 0) {
+    document.getElementById('yoyBody').innerHTML = '<tr><td colspan="5" class="empty-state">Odaberi oba tjedna</td></tr>';
+    return;
+  }
+
+  const rows = items.filter(s => curEntry.sektori[s] || pastEntry.sektori[s]).map(s => {
+    const curVal = curEntry.sektori[s]?.[period] ?? null;
+    const pastVal = pastEntry.sektori[s]?.[period] ?? null;
+    const delta = (curVal !== null && pastVal !== null) ? curVal - pastVal : null;
+    return { name: s, curVal, pastVal, delta };
+  });
+
+  // Rank calculation
+  const curRanked = [...rows].filter(r => r.curVal !== null).sort((a,b) => b.curVal - a.curVal);
+  const pastRanked = [...rows].filter(r => r.pastVal !== null).sort((a,b) => b.pastVal - a.pastVal);
+  const curRankMap = {};
+  const pastRankMap = {};
+  curRanked.forEach((r,i) => curRankMap[r.name] = i+1);
+  pastRanked.forEach((r,i) => pastRankMap[r.name] = i+1);
+
+  document.getElementById('yoyBody').innerHTML = rows.map(r => {
+    const cr = curRankMap[r.name] ?? '-';
+    const pr = pastRankMap[r.name] ?? '-';
+    const rankDelta = (typeof cr === 'number' && typeof pr === 'number') ? pr - cr : null;
+    const rankStr = rankDelta !== null
+      ? (rankDelta > 0 ? `<span style="color:var(--green)">▲${rankDelta}</span>` :
+         rankDelta < 0 ? `<span style="color:var(--red)">▼${Math.abs(rankDelta)}</span>` :
+         '<span style="color:var(--text-dim)">–</span>')
+      : '–';
+    const deltaStr = r.delta !== null
+      ? `<span class="${r.delta >= 0 ? 'yoy-delta-pos' : 'yoy-delta-neg'}">${r.delta >= 0 ? '+' : ''}${r.delta.toFixed(2)}pp</span>`
+      : '–';
+    return `<tr><td>${r.name}</td><td>${valCell(r.curVal)}</td><td>${valCell(r.pastVal)}</td><td>${deltaStr}</td><td>${rankStr}</td></tr>`;
+  }).join('');
+
+  // YoY bar chart
+  if (charts.yoy) charts.yoy.destroy();
+  const names = rows.map(r => r.name.length > 16 ? r.name.substring(0,14)+'…' : r.name);
+  const deltas = rows.map(r => r.delta ?? 0);
+  charts.yoy = new Chart(document.getElementById('yoyChart'), {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [{ label: 'Delta (pp)', data: deltas,
+        backgroundColor: deltas.map(v => v >= 0 ? 'rgba(34,211,160,0.7)' : 'rgba(244,63,94,0.7)'),
+        borderColor: deltas.map(v => v >= 0 ? '#22d3a0' : '#f43f5e'), borderWidth: 1 }]
+    },
+    options: { ...barOpts(), indexAxis: items.length > 15 ? 'y' : 'x' }
+  });
+
+  // YoY trend chart: show both periods for all items as grouped
+  if (charts.yoyTrend) charts.yoyTrend.destroy();
+  charts.yoyTrend = new Chart(document.getElementById('yoyTrendChart'), {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [
+        { label: curEntry.datum, data: rows.map(r => r.curVal ?? 0),
+          backgroundColor: 'rgba(245,158,11,0.7)', borderColor: '#f59e0b', borderWidth: 1 },
+        { label: pastEntry.datum, data: rows.map(r => r.pastVal ?? 0),
+          backgroundColor: 'rgba(56,189,248,0.5)', borderColor: '#38bdf8', borderWidth: 1 }
+      ]
+    },
+    options: barOpts()
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════════════
+function renderHistory() {
+  const data = getData();
+  const list = document.getElementById('historyList');
+  if (data.length === 0) { list.innerHTML = '<div class="empty-state">Nema unosa</div>'; return; }
+  list.innerHTML = '';
+  [...data].reverse().forEach(e => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.onclick = () => loadEntry(e.id);
+    const sCount = Object.keys(e.sektori || {}).length;
+    item.innerHTML = `
+      <div><div class="history-date">${e.datum}</div><div class="history-label">${e.label} <span class="text-dim mono" style="font-size:11px">(${sCount} stavki)</span></div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();loadEntry(${e.id})">Uredi</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteEntry(${e.id})">Briši</button>
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+function loadEntry(id) {
+  const entry = getData().find(e => e.id === id);
+  if (!entry) return;
+  document.getElementById('inputDate').value = entry.datum;
+  document.getElementById('inputLabel').value = entry.label !== entry.datum ? entry.label : '';
+  getItems().forEach(s => {
+    PERIODI.forEach(p => {
+      const el = document.getElementById(`inp_${sanitize(s)}_${p.key}`);
+      if (el) el.value = entry.sektori[s]?.[p.key] ?? '';
+    });
+  });
+  showTab('unos');
+  showToast(`Unos ${entry.datum} učitan`);
+}
+
+function deleteEntry(id) {
+  if (!confirm('Obriši ovaj unos?')) return;
+  saveData(getData().filter(e => e.id !== id));
+  renderHistory();
+  updateStats();
+  showToast('Unos obrisan');
+}
+
+function deleteAll() {
+  if (!confirm('Obriši SVE podatke za ' + (currentMode === 'sektori' ? 'sektore' : 'industrije') + '?')) return;
+  localStorage.removeItem(getStorageKey());
+  renderHistory();
+  updateStats();
+  showToast('Svi podaci obrisani', true);
+}
+
+// ═══════════════════════════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════
+function exportJSON() {
+  const allData = {
+    sektori: JSON.parse(localStorage.getItem(STORAGE_KEYS.sektori) || '[]'),
+    industrije: JSON.parse(localStorage.getItem(STORAGE_KEYS.industrije) || '[]'),
+    activeIndustries: activeIndustries
+  };
+  const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `rotacija_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast('JSON izvezen (sektori + industrije)');
+}
+
+function exportCSV() {
+  const data = getData();
+  const items = getItems();
+  const header = ['datum','label','stavka','tjedno','miesecno','tromj','polugod','godisnje','ytd'];
+  const rows = [header.join(',')];
+  data.forEach(e => {
+    items.forEach(s => {
+      const sec = e.sektori[s] || {};
+      rows.push([e.datum, `"${e.label}"`, `"${s}"`, sec.tjedno??'', sec.miesecno??'', sec.tromj??'', sec.polugod??'', sec.godisnje??'', sec.ytd??''].join(','));
+    });
+  });
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `rotacija_${currentMode}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSV izvezen');
+}
+
+function importJSON() { document.getElementById('importFile').click(); }
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+
+      // New unified format
+      if (imported.sektori && imported.industrije) {
+        if (imported.sektori.length) localStorage.setItem(STORAGE_KEYS.sektori, JSON.stringify(imported.sektori));
+        if (imported.industrije.length) localStorage.setItem(STORAGE_KEYS.industrije, JSON.stringify(imported.industrije));
+        if (imported.activeIndustries) {
+          activeIndustries = imported.activeIndustries;
+          localStorage.setItem('activeIndustries', JSON.stringify(activeIndustries));
+          renderIndustryPicker();
+        }
+        showToast(`Uvezeno: ${imported.sektori.length} sektor. unosa, ${imported.industrije.length} ind. unosa`);
+      }
+      // Legacy format (array)
+      else if (Array.isArray(imported)) {
+        const merged = getData();
+        let valid = 0;
+        imported.forEach(entry => {
+          if (!entry?.datum || !/^\d{4}-\d{2}-\d{2}$/.test(entry.datum)) return;
+          const idx = merged.findIndex(m => m.datum === entry.datum);
+          if (idx >= 0) merged[idx] = entry;
+          else merged.push(entry);
+          valid++;
+        });
+        merged.sort((a,b) => a.datum < b.datum ? -1 : 1);
+        saveData(merged);
+        showToast(`Uvezeno ${valid} unosa`);
+      }
+
+      renderHistory();
+      updateStats();
+    } catch(err) {
+      showToast('Greška: ' + err.message, true);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ═══════════════════════════════════════════════════════
+// AI WIZARD (OCR)
+// ═══════════════════════════════════════════════════════
+function openFinvizPage() {
+  const url = currentMode === 'industrije'
+    ? 'https://finviz.com/groups.ashx?g=industry&v=140&o=-change'
+    : 'https://finviz.com/groups.ashx?g=sector&v=140&o=-change';
+  window.open(url, '_blank');
+}
+
+function updateWizardModelSelect() {
+  const provider = document.getElementById('wizardProvider').value;
+  const sel = document.getElementById('wizardModel');
+  sel.innerHTML = '';
+  const models = AI_PROVIDERS[provider]?.models.filter(m => m.vision) || [];
+  models.forEach(m => sel.appendChild(new Option(m.label, m.id)));
+}
+
+async function captureFinvizScreen() {
+  if (!navigator.mediaDevices?.getDisplayMedia) { showToast('Screen capture nije podržan', true); return; }
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video: { displaySurface: 'browser' }, audio: false });
+    const track = stream.getVideoTracks()[0];
+    const imageCapture = new ImageCapture(track);
+    const bitmap = await imageCapture.grabFrame();
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    canvas.getContext('2d').drawImage(bitmap, 0, 0);
+    wizardImageDataUrl = canvas.toDataURL('image/png');
+    track.stop();
+    renderWizardPreview();
+    setWizardStatus('Screenshot snimljen.');
+  } catch(e) { showToast('Snimanje prekinuto', true); }
+}
+
+function handleWizardFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    wizardImageDataUrl = e.target.result;
+    wizardBatchImages = [wizardImageDataUrl];
+    renderWizardPreview();
+    document.getElementById('wizardBatchThumbs').innerHTML = '';
+    document.getElementById('batchWizardBtn').style.display = 'none';
+    setWizardStatus('Screenshot učitan.');
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function renderWizardPreview() {
+  const el = document.getElementById('wizardPreview');
+  if (!wizardImageDataUrl) { el.textContent = 'Nema screenshota'; return; }
+  el.innerHTML = `<img src="${wizardImageDataUrl}" alt="Screenshot">`;
+}
+
+// Multiple screenshots for batch
+
+function handleWizardFiles(event) {
+  const files = Array.from(event.target.files || []);
+  if (files.length === 0) return;
+  wizardBatchImages = [];
+  let loaded = 0;
+
+  files.forEach((file, idx) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      wizardBatchImages[idx] = e.target.result;
+      loaded++;
+      if (loaded === files.length) {
+        // Show first as main preview
+        wizardImageDataUrl = wizardBatchImages[0];
+        renderWizardPreview();
+        renderBatchThumbs();
+        document.getElementById('batchWizardBtn').style.display = 'inline-block';
+        setWizardStatus(`${files.length} screenshotova učitano. Spreman za batch OCR.`);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+
+function renderBatchThumbs() {
+  const el = document.getElementById('wizardBatchThumbs');
+  el.innerHTML = wizardBatchImages.map((img, i) =>
+    `<div style="width:80px;height:50px;border:1px solid var(--border);border-radius:3px;overflow:hidden;cursor:pointer;opacity:${i===0?1:0.6}" onclick="wizardImageDataUrl=wizardBatchImages[${i}];renderWizardPreview()">
+      <img src="${img}" style="width:100%;height:100%;object-fit:cover">
+    </div>`
+  ).join('');
+}
+
+async function runBatchAiWizard() {
+  const providerKey = document.getElementById('wizardProvider').value;
+  const model = document.getElementById('wizardModel').value;
+  const apiKey = localStorage.getItem(AI_PROVIDERS[providerKey].keyName);
+
+  if (!apiKey) { showToast(`Unesi ${AI_PROVIDERS[providerKey].name} API key u AI tab`, true); return; }
+  if (wizardBatchImages.length === 0) { showToast('Učitaj screenshotove', true); return; }
+
+  const items = getItems();
+  if (items.length === 0) { showToast('Nema stavki za unos', true); return; }
+
+  const progressEl = document.getElementById('wizardProgress');
+  const progressBar = document.getElementById('wizardProgressBar');
+  const progressText = document.getElementById('wizardProgressText');
+  progressEl.style.display = 'block';
+
+  let totalFilled = 0;
+  const allParsed = {};
+
+  for (let i = 0; i < wizardBatchImages.length; i++) {
+    const pct = ((i) / wizardBatchImages.length * 100).toFixed(0);
+    progressBar.style.width = pct + '%';
+    progressText.textContent = `Obrada screenshota ${i + 1}/${wizardBatchImages.length}...`;
+    setWizardStatus(`Batch OCR: screenshot ${i + 1}/${wizardBatchImages.length}...`);
+
+    const prompt = `Extract ALL sector/industry performance data visible in this Finviz screenshot. Return ONLY valid JSON where each key is the exact sector or industry name and value is an object with keys: tjedno, miesecno, tromj, polugod, godisnje, ytd (numbers or null). Example:
+{"Semiconductors": {"tjedno": 2.5, "miesecno": -1.2, "tromj": 5.0, "polugod": 8.3, "godisnje": 15.2, "ytd": 12.1}}
+Extract EVERY row visible. Use percentages as plain numbers. No markdown.`;
+
+    try {
+      const response = await callAiApi(providerKey, apiKey, model, [
+        { role: 'user', content: [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: wizardBatchImages[i] } }
+        ]}
+      ]);
+
+      let txt = response.trim();
+      if (txt.startsWith('```')) txt = txt.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+      const parsed = JSON.parse(txt);
+      Object.assign(allParsed, parsed);
+    } catch(err) {
+      setWizardStatus(`Screenshot ${i+1} greška: ${err.message}`, true);
+      // Continue with next
+    }
+
+    // Rate limit pause between calls
+    if (i < wizardBatchImages.length - 1) {
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+
+  progressBar.style.width = '100%';
+
+  // Auto-add recognized industries if in industry mode
+  if (currentMode === 'industrije') {
+    const recognized = Object.keys(allParsed).filter(k => ALL_INDUSTRIJE.includes(k));
+    const newOnes = recognized.filter(k => !activeIndustries.includes(k));
+    if (newOnes.length > 0) {
+      activeIndustries = [...new Set([...activeIndustries, ...newOnes])].sort();
+      localStorage.setItem('activeIndustries', JSON.stringify(activeIndustries));
+      renderIndustryPicker();
+      buildSectorGrid();
+      buildItemSelects();
+    }
+  }
+
+  // Fill form
+  const currentItems = getItems();
+  currentItems.forEach(s => {
+    // Try exact match first, then fuzzy
+    let sec = allParsed[s];
+    if (!sec) {
+      const key = Object.keys(allParsed).find(k =>
+        k.toLowerCase().replace(/\s+/g,' ').trim() === s.toLowerCase().replace(/\s+/g,' ').trim()
+      );
+      if (key) sec = allParsed[key];
+    }
+    if (!sec) return;
+
+    PERIODI.forEach(p => {
+      const el = document.getElementById(`inp_${sanitize(s)}_${p.key}`);
+      if (!el) return;
+      const v = sec[p.key];
+      if (Number.isFinite(Number(v))) {
+        el.value = Number(v).toFixed(2);
+        totalFilled++;
+      }
+    });
+  });
+
+  progressText.textContent = `Gotovo! ${totalFilled} polja popunjeno iz ${wizardBatchImages.length} screenshotova.`;
+  setWizardStatus(`Batch OCR završen. ${totalFilled} polja popunjeno.`);
+  showToast(`Batch Wizard: ${totalFilled} polja popunjeno`);
+
+  setTimeout(() => { progressEl.style.display = 'none'; }, 5000);
+}
+
+function setWizardStatus(msg, error = false) {
+  const el = document.getElementById('wizardStatus');
+  el.textContent = msg;
+  el.style.color = error ? 'var(--red)' : 'var(--blue)';
+}
+
+async function runAiWizard() {
+  const providerKey = document.getElementById('wizardProvider').value;
+  const model = document.getElementById('wizardModel').value;
+  if (!wizardImageDataUrl) { showToast('Učitaj screenshot', true); return; }
+
+  const apiKey = localStorage.getItem(AI_PROVIDERS[providerKey].keyName);
+  if (!apiKey) { showToast(`Unesi ${AI_PROVIDERS[providerKey].name} API key u AI tab`, true); return; }
+
+  setWizardStatus('AI obrada...');
+
+  // Free extraction prompt — don't limit to known items
+  const prompt = `Extract ALL sector/industry performance data visible in this Finviz screenshot. Return ONLY valid JSON where each key is the exact sector or industry name and value is an object with keys: tjedno, miesecno, tromj, polugod, godisnje, ytd (numbers or null).
+Example: {"Technology": {"tjedno": 2.5, "miesecno": -1.2, "tromj": 5.0, "polugod": 8.3, "godisnje": 15.2, "ytd": 12.1}}
+Extract EVERY row visible. Use percentages as plain numbers. No markdown.`;
+
+  try {
+    const response = await callAiApi(providerKey, apiKey, model, [
+      { role: 'user', content: [
+        { type: 'text', text: prompt },
+        { type: 'image_url', image_url: { url: wizardImageDataUrl } }
+      ]}
+    ]);
+
+    let txt = response.trim();
+    if (txt.startsWith('```')) txt = txt.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+    const parsed = JSON.parse(txt);
+
+    // Auto-add recognized industries if in industry mode
+    if (currentMode === 'industrije') {
+      const recognized = Object.keys(parsed).filter(k => ALL_INDUSTRIJE.includes(k));
+      const newOnes = recognized.filter(k => !activeIndustries.includes(k));
+      if (newOnes.length > 0) {
+        activeIndustries = [...new Set([...activeIndustries, ...newOnes])].sort();
+        localStorage.setItem('activeIndustries', JSON.stringify(activeIndustries));
+        renderIndustryPicker();
+        buildSectorGrid();
+        buildItemSelects();
+      }
+    }
+
+    // Fill form: match exact or fuzzy
+    const items = getItems();
+    let filled = 0;
+    items.forEach(s => {
+      let sec = parsed[s];
+      if (!sec) {
+        const key = Object.keys(parsed).find(k =>
+          k.toLowerCase().replace(/\s+/g,' ').trim() === s.toLowerCase().replace(/\s+/g,' ').trim()
+        );
+        if (key) sec = parsed[key];
+      }
+      if (!sec) return;
+      PERIODI.forEach(p => {
+        const el = document.getElementById(`inp_${sanitize(s)}_${p.key}`);
+        if (!el) return;
+        const v = sec[p.key];
+        if (Number.isFinite(Number(v))) { el.value = Number(v).toFixed(2); filled++; }
+      });
+    });
+
+    setWizardStatus(`Podaci upisani (${filled} polja, ${Object.keys(parsed).length} stavki prepoznato).`);
+    showToast(`AI Wizard: ${filled} polja popunjeno`);
+  } catch(err) {
+    setWizardStatus('Greška: ' + err.message, true);
+    showToast('AI Wizard greška', true);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// AI CHAT
+// ═══════════════════════════════════════════════════════
+function buildAiSettings() {
+  const grid = document.getElementById('aiSettingsGrid');
+  grid.innerHTML = Object.entries(AI_PROVIDERS).map(([key, prov]) => {
+    const saved = localStorage.getItem(prov.keyName);
+    return `<div class="api-card">
+      <div class="api-card-header">
+        <div class="api-card-name">${prov.name}</div>
+        <div class="api-status ${saved ? 'ok' : 'no'}" id="apiStatus_${key}">${saved ? '✓ OK' : '✗ –'}</div>
+      </div>
+      <input type="password" id="apiKey_${key}" placeholder="API key..." value="${saved || ''}" onchange="saveApiKey('${key}')">
+    </div>`;
+  }).join('');
+
+  // Populate chat provider select
+  const chatProv = document.getElementById('aiChatProvider');
+  chatProv.innerHTML = Object.entries(AI_PROVIDERS).map(([k,v]) =>
+    `<option value="${k}">${v.name}</option>`
+  ).join('');
+}
+
+function loadApiKeys() {
+  Object.entries(AI_PROVIDERS).forEach(([key, prov]) => {
+    const saved = localStorage.getItem(prov.keyName);
+    const input = document.getElementById(`apiKey_${key}`);
+    if (input && saved) input.value = saved;
+  });
+}
+
+function saveApiKey(providerKey) {
+  const val = document.getElementById(`apiKey_${providerKey}`).value.trim();
+  const prov = AI_PROVIDERS[providerKey];
+  if (val) localStorage.setItem(prov.keyName, val);
+  else localStorage.removeItem(prov.keyName);
+  const status = document.getElementById(`apiStatus_${providerKey}`);
+  status.className = `api-status ${val ? 'ok' : 'no'}`;
+  status.textContent = val ? '✓ OK' : '✗ –';
+}
+
+function updateAiChatModel() {
+  const provKey = document.getElementById('aiChatProvider').value;
+  const sel = document.getElementById('aiChatModel');
+  sel.innerHTML = '';
+  (AI_PROVIDERS[provKey]?.models || []).forEach(m =>
+    sel.appendChild(new Option(m.label, m.id))
+  );
+}
+
+function getMarketContext() {
+  const sData = JSON.parse(localStorage.getItem(STORAGE_KEYS.sektori) || '[]');
+  const iData = JSON.parse(localStorage.getItem(STORAGE_KEYS.industrije) || '[]');
+  let ctx = '';
+
+  if (sData.length > 0) {
+    const last = sData[sData.length - 1];
+    ctx += `\n== SEKTORI (${last.datum}) ==\n`;
+    SEKTORI.forEach(s => {
+      const sec = last.sektori[s];
+      if (sec) ctx += `${s}: tj=${pct(sec.tjedno)} mj=${pct(sec.miesecno)} 3mj=${pct(sec.tromj)} 6mj=${pct(sec.polugod)} god=${pct(sec.godisnje)} ytd=${pct(sec.ytd)}\n`;
+    });
+    if (sData.length >= 2) {
+      ctx += `\n(Prethodni tjedan: ${sData[sData.length-2].datum})\n`;
+    }
+  }
+
+  if (iData.length > 0 && activeIndustries.length > 0) {
+    const last = iData[iData.length - 1];
+    ctx += `\n== INDUSTRIJE (${last.datum}) ==\n`;
+    activeIndustries.forEach(s => {
+      const sec = last.sektori[s];
+      if (sec) ctx += `${s}: tj=${pct(sec.tjedno)} mj=${pct(sec.miesecno)} 3mj=${pct(sec.tromj)} ytd=${pct(sec.ytd)}\n`;
+    });
+  }
+
+  return ctx || '\n(Nema podataka u sustavu)';
+}
+
+function quickAction(type) {
+  const prompts = {
+    analyze: 'Analiziraj trenutne sektorske performanse. Koji sektori su u uzlaznom trendu, a koji u silaznom? Daj pregled rotacije i što to znači za tržište.',
+
+    strategy: 'Na temelju trenutnih podataka, preporuči investicijsku strategiju. Koji sektori imaju momentum? Gdje su kontrarian prilike? Razlikuj kratkoročne (swing) i dugoročne (position) prilike.',
+
+    signals: 'Provjeri signale rotacije. Postoje li sektori koji imaju kratkoročni oporavak ali su dugoročno slabi (dead cat bounce)? Analiziraj divergencije između tjednih i godišnjih performansi.',
+
+    stovall: `ZADATAK: Odredi u kojoj fazi ekonomskog i stock market ciklusa se nalazimo prema Sam Stovall Sector Rotation modelu.
+
+STOVALL MODEL - MAPPING SEKTORA PO FAZAMA:
+• MARKET BOTTOM / RANI OPORAVAK (Early Recovery): Vodeći sektori su Technology, Financials, Consumer Cyclical (Discretionary). Ekonomija: GDP stagnira/pada, kamate padaju, yield curve steep, nezaposlenost visoka ali stabilizira se.
+• SREDNJI OPORAVAK (Mid Recovery): Vodeći su Industrials, Basic Materials, Real Estate. Ekonomija raste, profiti rastu, kamate još uvijek niske.
+• KASNI OPORAVAK / BULL MARKET PEAK (Late Recovery): Vodeći su Energy, Basic Materials. Ekonomija na vrhuncu, inflacija raste, kamate rastu, yield curve se spljoštava.
+• RANI PAD / EARLY RECESSION: Vodeći su Healthcare, Consumer Defensive (Staples), Utilities. Ekonomija usporava, profiti padaju, kamate još uvijek visoke ali počinju padati.
+• PUNA RECESIJA (Full Recession): Vodeći su Utilities, Consumer Defensive. Ekonomija se kontrahira, kamate padaju agresivno, yield curve opet steepens.
+
+ANALIZA:
+1. Pogledaj koji sektori trenutno PREDVODE (imaju najveći tjedno i mjesečno rast) — to je ključni signal za fazu ciklusa
+2. Pogledaj koji sektori ZAOSTAJU (dugoročno i kratkoročno slabi)
+3. Usporedi pattern vođenja s Stovall modelom
+4. Zaključi u kojoj smo fazi ekonomskog ciklusa i stock market ciklusa
+5. Navedi koji sektori bi SLJEDEĆI trebali preuzeti vodstvo prema rotacijskom obrascu
+6. Daj praktičnu preporuku — u koje sektore se pozicionirati za sljedeću fazu
+
+Koristi tablicu iz podataka. Budi specifičan s brojevima.`,
+
+    turnaround: `TURNAROUND SCREENER — Pronađi dugoročno najgore sektore/industrije koje kratkoročno pokazuju rast.
+
+PRAVILO: Sortiraj sve stavke po formuli: T-Score = Tjedno_perf − min(Godišnje, 6mj)
+Što je T-Score viši, to je jači turnaround signal — kratkoročni rast u kontekstu dugoročnog pada.
+
+ANALIZA:
+1. Navedi TOP 10 stavki po T-Score (dugoročno najgori ali kratkoročno rastu)
+2. Za svaku navedi: sva 6 perioda i T-Score
+3. Procijeni za svaku: je li ovo "dead cat bounce" (privremeni odskok u padu) ili pravi turnaround?
+   - INDIKATORI PRAVOG TURNAROUNDA: tjedno > 0, mjesečno pozitivno ili manje negativno od 3mj, volumen raste
+   - INDIKATORI DEAD CAT BOUNCE: samo tjedni rast, sve ostalo negativno, dugačak downtrend (god < -20%)
+4. Rangiraj ih: 🟢 Vjerojatan turnaround, 🟡 Moguć ali neizvjestan, 🔴 Vjerojatno dead cat bounce
+5. Navedi koji bi bio idealan entry za pozicije u turnaround kandidatima
+
+Budi konkretan s brojevima iz podataka.`,
+
+    exhaustion: `DOWNTREND EXHAUSTION ANALYSIS — Pronađi sektore/industrije gdje bi downtrend mogao biti pri kraju.
+
+PRAVILA ZA ISCRPLJENI DOWNTREND:
+1. Godišnji pad > -15% (dugotrajan pad)
+2. Ali 6-mjesečni pad MANJI od godišnjeg (pad se usporava)
+3. I 3-mjesečni pad MANJI od 6-mjesečnog (daljnje usporavanje)
+4. Idealno: tjedni ili mjesečni performance pozitivni (prvi znakovi preokreta)
+
+Za svaku stavku koja zadovoljava kriterije:
+- Navedi sve performanse
+- Procijeni: koliko daleko je od dna? Jesu li se fundamentali promijenili?
+- Navedi risk/reward ocjenu (1-10)
+- Preporuči strategiju: agresivni entry, čekaj potvrdu, ili izbjegavaj
+
+Koristi podatke iz konteksta. Budi praktičan i konkretan.`,
+
+    divergence: `MOMENTUM DIVERGENCE ANALYSIS — Pronađi stavke s najvećom razlikom između kratkoročne i dugoročne performanse.
+
+IZRAČUNAJ za svaku stavku:
+- Pozitivna divergencija: Tjedno >> Godišnje (kratkoročno raste puno brže nego dugoročni prosjek)
+- Negativna divergencija: Tjedno << Godišnje (kratkoročni pad u inače dobrom sektoru)
+
+ANALIZA:
+1. TOP 5 pozitivna divergencija — potencijalni turnaround ili momentum shift
+2. TOP 5 negativna divergencija — potencijalni topping ili mean reversion
+3. Za svaku objasni što bi to moglo značiti i kakva je trgovinska prilika
+4. Usporedi s Stovall modelom — je li divergencija u skladu s očekivanom rotacijom?`,
+
+    compare: 'Usporedi trenutne sektorske performanse s prethodnim razdobljima. Koji sektori su poboljšali poziciju, a koji su oslabili? Traži promjene u vodstvu.',
+
+    industries: 'Analiziraj performanse praćenih industrija. Koje industrije imaju najjači momentum? Koje zaostaju i zašto? Grupiraj industrije po matičnom sektoru i identificiraj unutarsektorsku rotaciju.',
+
+    macro: 'Daj macro outlook na temelju sektorske rotacije. Koristi Stovall model da odrediš fazu ciklusa. Što nam govori leadership defenzivnih vs. cikličkih sektora? Kakav je breadth tržišta?'
+  };
+  document.getElementById('aiInput').value = prompts[type] || '';
+  sendAiMessage();
+}
+
+async function sendAiMessage() {
+  const input = document.getElementById('aiInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const provKey = document.getElementById('aiChatProvider').value;
+  const model = document.getElementById('aiChatModel').value;
+  const apiKey = localStorage.getItem(AI_PROVIDERS[provKey].keyName);
+
+  if (!apiKey) { showToast(`Unesi API key za ${AI_PROVIDERS[provKey].name}`, true); return; }
+
+  appendAiMsg('user', msg);
+  input.value = '';
+
+  const context = getMarketContext();
+  const systemMsg = `Ti si AI analitičar tržišta specijaliziran za sektorsku i industrijsku rotaciju prema Sam Stovall modelu. Korisnik prati tjedne performanse sektora i industrija s Finviz-a. Odgovaraj na hrvatskom jeziku. Budi koncizan ali informativan.
+
+STOVALL SECTOR ROTATION MODEL:
+• MARKET BOTTOM → RANI OPORAVAK: Technology, Financials, Consumer Cyclical vode. Kamate padaju, yield curve steep.
+• SREDNJI OPORAVAK: Industrials, Basic Materials, Real Estate. GDP raste, profiti rastu.
+• KASNI OPORAVAK / BULL PEAK: Energy, Materials vode. Inflacija raste, kamate rastu.
+• RANI PAD: Healthcare, Consumer Defensive, Utilities vode. Profiti padaju.
+• PUNA RECESIJA: Utilities, Consumer Defensive dominiraju. Kamate padaju agresivno.
+Stock market prednjači ekonomiji 6-9 mjeseci. Analiziraj leadership sektora da odrediš fazu ciklusa.
+
+T-SCORE = Tjedno - min(Godišnje, 6mj). Viši = jači turnaround signal.
+MOMENTUM = Tjedno - Godišnje. Pozitivan = kratkoročni momentum jači od dugoročnog.
+
+TRENUTNI PODACI:${context}`;
+
+  aiChatHistory.push({ role: 'user', content: msg });
+
+  const messages = [
+    { role: 'system', content: systemMsg },
+    ...aiChatHistory.slice(-10)
+  ];
+
+  appendAiMsg('system', `⏳ ${AI_PROVIDERS[provKey].name} / ${model}...`);
+
+  try {
+    const response = await callAiApi(provKey, apiKey, model, messages);
+    // Remove loading msg
+    const msgs = document.getElementById('aiMessages');
+    msgs.removeChild(msgs.lastChild);
+
+    aiChatHistory.push({ role: 'assistant', content: response });
+    appendAiMsg('ai', response);
+  } catch(err) {
+    const msgs = document.getElementById('aiMessages');
+    msgs.removeChild(msgs.lastChild);
+    appendAiMsg('system', '❌ Greška: ' + err.message);
+  }
+}
+
+function appendAiMsg(type, text) {
+  const el = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = `ai-msg ai-msg-${type}`;
+
+  if (type === 'ai') {
+    // Simple markdown
+    let html = text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
+    div.innerHTML = html;
+  } else {
+    div.textContent = text;
+  }
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearAiChat() {
+  aiChatHistory = [];
+  document.getElementById('aiMessages').innerHTML =
+    '<div class="ai-msg ai-msg-system">Chat očišćen. Spreman za novu analizu.</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+// AI API CALLER (universal)
+// ═══════════════════════════════════════════════════════
+async function callAiApi(providerKey, apiKey, model, messages) {
+  const prov = AI_PROVIDERS[providerKey];
+
+  // Gemini uses different API format
+  if (providerKey === 'gemini') {
+    return await callGemini(apiKey, model, messages);
+  }
+
+  // OpenAI-compatible (Groq, OpenRouter, Mistral)
+  const res = await fetch(prov.endpoint, {
+    method: 'POST',
+    headers: prov.buildHeaders(apiKey),
+    body: JSON.stringify(prov.buildBody(model, messages))
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`${prov.name} ${res.status}: ${txt.slice(0, 200)}`);
+  }
+
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content || 'Prazan odgovor';
+}
+
+async function callGemini(apiKey, model, messages) {
+  const contents = messages.filter(m => m.role !== 'system').map(m => {
+    const parts = [];
+    if (typeof m.content === 'string') {
+      parts.push({ text: m.content });
+    } else if (Array.isArray(m.content)) {
+      m.content.forEach(c => {
+        if (c.type === 'text') parts.push({ text: c.text });
+        else if (c.type === 'image_url') {
+          const base64 = c.image_url.url.split(',')[1];
+          const mime = c.image_url.url.match(/data:([^;]+)/)?.[1] || 'image/png';
+          parts.push({ inline_data: { mime_type: mime, data: base64 }});
+        }
+      });
+    }
+    return { role: m.role === 'assistant' ? 'model' : 'user', parts };
+  });
+
+  const systemMsg = messages.find(m => m.role === 'system');
+  const body = {
+    contents,
+    generationConfig: { temperature: 0.3, maxOutputTokens: 4096 }
+  };
+  if (systemMsg) body.systemInstruction = { parts: [{ text: systemMsg.content }] };
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`Gemini ${res.status}: ${txt.slice(0, 200)}`);
+  }
+
+  const data = await res.json();
+  return data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || 'Prazan odgovor';
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════════
+function showTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.getAttribute('onclick')?.includes(`'${tab}'`)) b.classList.add('active');
+  });
+
+  if (tab === 'rang') { populateWeekSelect(); renderRankTable(); }
+  if (tab === 'vizual') { renderCharts(); }
+  if (tab === 'signali') { renderSignals(); }
+  if (tab === 'yoy') { populateYoYSelects(); renderYoY(); }
+  if (tab === 'povijest') { renderHistory(); }
+}
+
+// ═══════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
