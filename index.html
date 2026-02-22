@@ -678,6 +678,12 @@
     font-size: 13px;
   }
 
+  .help-list {
+    margin-left: 18px;
+    line-height: 1.7;
+  }
+  .help-list li { margin-bottom: 6px; }
+
   /* ─── SCROLLBAR ─── */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
@@ -726,6 +732,7 @@
   <button class="nav-btn" onclick="showTab('yoy')">[ YoY Usporedba ]</button>
   <button class="nav-btn" onclick="showTab('povijest')">[ Povijest ]</button>
   <button class="nav-btn" onclick="showTab('ai')" style="color:var(--purple)">[ ◆ AI Asistent ]</button>
+  <button class="nav-btn" onclick="showTab('upute')">[ Upute ]</button>
 </nav>
 
 <main>
@@ -907,6 +914,7 @@
       <div class="period-tab" onclick="setVizPeriod('godisnje',this)">God.</div>
       <div class="period-tab" onclick="setVizPeriod('ytd',this)">YTD</div>
     </div>
+    <div class="wizard-note" style="margin-bottom:12px">Disperzija prikazuje razmak između najboljeg i najgoreg sektora/industrije kroz vrijeme (veći spread = veća rotacija/rizik). Breadth prikazuje udio pozitivnih stavki u % (iznad 50% = šira tržišna snaga).</div>
     <div class="flex gap-12" style="flex-wrap:wrap;align-items:center;margin-bottom:12px">
       <div>
         <div class="form-label">Odaberi stavke za trend</div>
@@ -939,7 +947,19 @@
     </div>
   </div>
   <div class="card" style="position:relative">
-    <div class="card-title">Momentum Score (Tjedno − Godišnje) – zadnji tjedan <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="expandChart('momentumChart')">⛶ Proširi</button></div>
+    <div class="card-title" id="momentumCardTitle">Momentum Score (Tjedno − Godišnje) – zadnji tjedan <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="expandChart('momentumChart')">⛶ Proširi</button></div>
+    <div class="btn-row mb-16">
+      <div>
+        <div class="form-label">Momentum formula <span title="Odabireš kako se računa momentum score u grafovima, heatmapu i signalima.">ⓘ</span></div>
+        <select id="momentumMode" onchange="setMomentumMode(this.value)" style="min-width:280px">
+          <option value="tjedno">Tjedno − Godišnje</option>
+          <option value="miesecno">Mjesečno − Godišnje</option>
+          <option value="tromj">3M − Godišnje</option>
+          <option value="combo">(Tjedno + Mjesečno)/2 − Godišnje</option>
+          <option value="combo3">(Tjedno + Mjesečno + 3M)/3 − Godišnje</option>
+        </select>
+      </div>
+    </div>
     <div class="chart-container" style="height:400px"><canvas id="momentumChart"></canvas></div>
   </div>
   <div class="card">
@@ -971,15 +991,15 @@
     <div class="card-title">Parametri signala rotacije</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px">
       <div>
-        <div class="form-label">Min. tjedno (%) za signal</div>
+        <div class="form-label">Min. tjedno (%) za signal <span title="Signal prolazi samo ako je tjedna promjena jednaka ili veća od ove vrijednosti.">ⓘ</span></div>
         <input type="number" id="sigTjedno" value="1.5" step="0.1">
       </div>
       <div>
-        <div class="form-label">Min. mjesečno (%) za signal</div>
+        <div class="form-label">Min. mjesečno (%) za signal <span title="Dodatni filter za 1M period. Ostavi 0 ako ne želiš stroži uvjet.">ⓘ</span></div>
         <input type="number" id="sigMjesecno" value="0" step="0.1">
       </div>
       <div>
-        <div class="form-label">Maks. godišnje (%) za signal</div>
+        <div class="form-label">Maks. godišnje (%) za signal <span title="Negativnije godišnje vrijednosti bolje ističu short-term rebound u dugoročnom downtrendu.">ⓘ</span></div>
         <input type="number" id="sigGodisnje" value="-5" step="0.1">
       </div>
     </div>
@@ -993,7 +1013,7 @@
         <input type="number" id="sigPolugod" value="" step="0.1" placeholder="opcija">
       </div>
       <div>
-        <div class="form-label">Min. Momentum Score (tj-god)</div>
+        <div class="form-label" id="sigMomentumLabel">Min. Momentum Score (tjedno-godišnje)</div>
         <input type="number" id="sigMomentum" value="" step="0.5" placeholder="npr. 5">
       </div>
     </div>
@@ -1015,7 +1035,31 @@
   </div>
   <div class="card">
     <div class="card-title">🔄 Turnaround kandidati – dugoročno najgori s kratkoročnim rastom</div>
+    <div class="btn-row mb-16" style="align-items:flex-end">
+      <div>
+        <div class="form-label">T-Score formula <span title="Mijenja način izračuna turnaround score-a i redoslijed kandidata.">ⓘ</span></div>
+        <select id="turnaroundScoreMode" onchange="setTurnaroundScoreMode(this.value)" style="min-width:360px">
+          <option value="weekYear">Tjedan − Godina</option>
+          <option value="weekMonthYear">(Tjedan + Mjesec)/2 − Godina</option>
+          <option value="weekMonthQuarterYear">(Tjedan + Mjesec + 3M)/3 − Godina</option>
+        </select>
+      </div>
+    </div>
     <div id="turnaroundOutput"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📉 Downturn kandidati – dugoročno jaki sa slabljenjem kratkog roka</div>
+    <div class="btn-row mb-16" style="align-items:flex-end">
+      <div>
+        <div class="form-label">D-Score formula <span title="Mijenja način izračuna downturn score-a i redoslijed kandidata.">ⓘ</span></div>
+        <select id="downturnScoreMode" onchange="setDownturnScoreMode(this.value)" style="min-width:360px">
+          <option value="weekYear">Godina − Tjedan</option>
+          <option value="weekMonthYear">Godina − (Tjedan + Mjesec)/2</option>
+          <option value="weekMonthQuarterYear">Godina − (Tjedan + Mjesec + 3M)/3</option>
+        </select>
+      </div>
+    </div>
+    <div id="downturnOutput"></div>
   </div>
   <div class="card">
     <div class="card-title">Rang konzistentnosti – zadnja 4 tjedna</div>
@@ -1101,7 +1145,9 @@
     <div class="card-title" id="povijestTitle">Svi unosi – sektori</div>
     <div class="btn-row mb-16">
       <button class="btn btn-secondary" onclick="exportJSON()">Izvoz JSON</button>
-      <button class="btn btn-secondary" onclick="exportCSV()">Izvoz CSV</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">Izvoz CSV (aktivni prikaz)</button>
+      <button class="btn btn-secondary" onclick="exportAllCSV()">Izvoz CSV (sve)</button>
+      <button class="btn btn-secondary" onclick="exportJSONL()">Izvoz JSONL za AI</button>
       <button class="btn btn-secondary" onclick="importJSON()">Uvoz JSON</button>
       <button class="btn btn-danger" onclick="deleteAll()">Obriši sve podatke</button>
     </div>
@@ -1156,6 +1202,38 @@
       <textarea id="aiInput" placeholder="Postavi pitanje o tržištu, sektorima, industrijama..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage()}"></textarea>
       <button class="btn btn-ai" onclick="sendAiMessage()" style="height:44px">Pošalji</button>
     </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB: UPUTE                                              -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="tab-upute" class="tab-panel">
+  <div class="card">
+    <div class="card-title">Kako koristiti aplikaciju korak-po-korak</div>
+    <ol class="help-list">
+      <li><strong>Odaberi mod:</strong> gore desno prebaci između <em>Sektori</em> i <em>Industrije</em>. Industrije traže prvo odabir stavki u pickeru.</li>
+      <li><strong>Unesi podatke:</strong> u tabu <em>Unos</em> odaberi datum, opcionalnu bilješku i popuni prinose po periodima (tjedno, mjesečno, 3m, 6m, godišnje, YTD).</li>
+      <li><strong>Brzi unos:</strong> koristi <em>Uvezi iz clipboard-a</em> ili <em>Smart Paste</em> za Finviz tablice. Za OCR unos možeš koristiti AI Wizard sa screenshotom.</li>
+      <li><strong>Spremi tjedan:</strong> klikni <em>Spremi unos</em>. Ako datum već postoji, aplikacija nudi zamjenu postojećeg zapisa.</li>
+      <li><strong>Analiziraj:</strong> koristi tabove <em>Rang</em>, <em>Signali</em>, <em>Vizualizacije</em> i <em>YoY Usporedba</em> za brzu interpretaciju tržišne rotacije.</li>
+      <li><strong>Turnaround & Downturn:</strong> u tabu <em>Signali</em> koristi T-Score/D-Score formule za detekciju oporavka iz slabosti ili raspada iz dugoročne snage.</li>
+      <li><strong>Momentum formula:</strong> u tabu <em>Vizualizacije</em> možeš birati izračun momentum score-a (Tjedno/God, Mjesečno/God, 3M/God, kombinirano Tjedno+Mjesečno/God ili Tjedno+Mjesečno+3M/God).</li>
+      <li><strong>Povijest i uređivanje:</strong> u tabu <em>Povijest</em> možeš učitati stari unos u formu, obrisati pojedinačni zapis ili sve podatke.</li>
+      <li><strong>AI asistencija:</strong> u tabu <em>AI Asistent</em> unesi API ključ, odaberi provider/model i pitaj za sažetak, strategiju ili signalne ideje.</li>
+      <li><strong>Izvoz za vanjski AI:</strong> u <em>Povijest</em> koristi <em>Izvoz CSV (sve)</em> ili <em>Izvoz JSONL za AI</em>. Ti formati uključuju sve sektorske i industrijske zapise za daljnju analizu.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Preporučeni workflow (tjedni)</div>
+    <ol class="help-list">
+      <li>Petkom zatvori tjedan i zalijepi Finviz Performance tablicu.</li>
+      <li>Provjeri top i bottom rang na tabu <em>Rang</em>.</li>
+      <li>Na tabu <em>Signali</em> filtriraj turnaround i momentum kandidate.</li>
+      <li>Izvezi JSONL/CSV i pošalji vanjskom AI modelu za dublju kvant analizu.</li>
+    </ol>
   </div>
 </div>
 
@@ -1291,6 +1369,9 @@ let wizardImageDataUrl = null;
 let wizardBatchImages = [];
 let aiChatHistory = [];
 let hmSortMode = 'name';
+let momentumMode = 'tjedno';
+let turnaroundScoreMode = 'weekYear';
+let downturnScoreMode = 'weekYear';
 
 // ═══════════════════════════════════════════════════════
 // HELPERS
@@ -1323,6 +1404,109 @@ function valCell(v) {
 function avg(arr) {
   const valid = arr.filter(v => v !== null && !isNaN(v));
   return valid.length ? valid.reduce((a,b) => a+b, 0) / valid.length : 0;
+}
+function csvEscape(value) {
+  const raw = value === null || value === undefined ? '' : String(value);
+  return `"${raw.replace(/"/g, '""')}"`;
+}
+function getAllItemsFromDataset(dataset) {
+  const names = new Set();
+  (dataset || []).forEach(entry => Object.keys(entry.sektori || {}).forEach(name => names.add(name)));
+  return [...names].sort((a, b) => a.localeCompare(b));
+}
+function getMomentumLabel() {
+  const labels = {
+    tjedno: 'Tjedno − Godišnje',
+    miesecno: 'Mjesečno − Godišnje',
+    tromj: '3M − Godišnje',
+    combo: '(Tjedno + Mjesečno)/2 − Godišnje',
+    combo3: '(Tjedno + Mjesečno + 3M)/3 − Godišnje'
+  };
+  return labels[momentumMode] || labels.tjedno;
+}
+function getTurnaroundScoreLabel() {
+  const labels = {
+    weekYear: 'Tjedan − Godina',
+    weekMonthYear: '(Tjedan + Mjesec)/2 − Godina',
+    weekMonthQuarterYear: '(Tjedan + Mjesec + 3M)/3 − Godina'
+  };
+  return labels[turnaroundScoreMode] || labels.weekYear;
+}
+function getDownturnScoreLabel() {
+  const labels = {
+    weekYear: 'Godina − Tjedan',
+    weekMonthYear: 'Godina − (Tjedan + Mjesec)/2',
+    weekMonthQuarterYear: 'Godina − (Tjedan + Mjesec + 3M)/3'
+  };
+  return labels[downturnScoreMode] || labels.weekYear;
+}
+function calcMomentum(sec = {}) {
+  const tj = sec.tjedno ?? 0;
+  const mj = sec.miesecno ?? 0;
+  const tr = sec.tromj ?? 0;
+  const god = sec.godisnje ?? 0;
+  if (momentumMode === 'miesecno') return mj - god;
+  if (momentumMode === 'tromj') return tr - god;
+  if (momentumMode === 'combo') return ((tj + mj) / 2) - god;
+  if (momentumMode === 'combo3') return ((tj + mj + tr) / 3) - god;
+  return tj - god;
+}
+function calcTurnaroundScore(sec = {}) {
+  const tj = sec.tjedno ?? 0;
+  const mj = sec.miesecno ?? 0;
+  const tr = sec.tromj ?? 0;
+  const god = sec.godisnje ?? 0;
+  if (turnaroundScoreMode === 'weekMonthYear') return ((tj + mj) / 2) - god;
+  if (turnaroundScoreMode === 'weekMonthQuarterYear') return ((tj + mj + tr) / 3) - god;
+  return tj - god;
+}
+function calcDownturnScore(sec = {}) {
+  const tj = sec.tjedno ?? 0;
+  const mj = sec.miesecno ?? 0;
+  const tr = sec.tromj ?? 0;
+  const god = sec.godisnje ?? 0;
+  if (downturnScoreMode === 'weekMonthYear') return god - ((tj + mj) / 2);
+  if (downturnScoreMode === 'weekMonthQuarterYear') return god - ((tj + mj + tr) / 3);
+  return god - tj;
+}
+function setMomentumMode(mode) {
+  momentumMode = mode;
+  localStorage.setItem('momentumMode', momentumMode);
+  updateMomentumUiLabels();
+  const activeTab = document.querySelector('.tab-panel.active')?.id?.replace('tab-','');
+  if (activeTab === 'rang') {
+    const data = getData();
+    const id = parseInt(document.getElementById('weekSelect')?.value);
+    const entry = data.find(e => e.id === id) || data[data.length - 1];
+    if (entry) renderHeatmap(entry);
+  }
+  if (activeTab === 'vizual') renderCharts();
+  if (activeTab === 'signali') renderSignals();
+}
+function setTurnaroundScoreMode(mode) {
+  turnaroundScoreMode = mode;
+  localStorage.setItem('turnaroundScoreMode', turnaroundScoreMode);
+  const sel = document.getElementById('turnaroundScoreMode');
+  if (sel) sel.value = turnaroundScoreMode;
+  if (document.querySelector('.tab-panel.active')?.id === 'tab-signali') renderSignals();
+}
+function setDownturnScoreMode(mode) {
+  downturnScoreMode = mode;
+  localStorage.setItem('downturnScoreMode', downturnScoreMode);
+  const sel = document.getElementById('downturnScoreMode');
+  if (sel) sel.value = downturnScoreMode;
+  if (document.querySelector('.tab-panel.active')?.id === 'tab-signali') renderSignals();
+}
+function updateMomentumUiLabels() {
+  const label = getMomentumLabel();
+  const chartTitle = document.getElementById('momentumCardTitle');
+  if (chartTitle) {
+    chartTitle.innerHTML = `Momentum Score (${label}) – zadnji tjedan <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="expandChart('momentumChart')">⛶ Proširi</button>`;
+  }
+  const sigLbl = document.getElementById('sigMomentumLabel');
+  if (sigLbl) sigLbl.textContent = `Min. Momentum Score (${label.toLowerCase().replace(' − ', '-')})`; 
+  const sel = document.getElementById('momentumMode');
+  if (sel) sel.value = momentumMode;
 }
 function showToast(msg, error = false) {
   const t = document.getElementById('toast');
@@ -1447,6 +1631,14 @@ function init() {
   updateStats();
   updateClock();
   setInterval(updateClock, 1000);
+  momentumMode = localStorage.getItem('momentumMode') || 'tjedno';
+  turnaroundScoreMode = localStorage.getItem('turnaroundScoreMode') || 'weekYear';
+  downturnScoreMode = localStorage.getItem('downturnScoreMode') || 'weekYear';
+  updateMomentumUiLabels();
+  const tsSel = document.getElementById('turnaroundScoreMode');
+  if (tsSel) tsSel.value = turnaroundScoreMode;
+  const dsSel = document.getElementById('downturnScoreMode');
+  if (dsSel) dsSel.value = downturnScoreMode;
   updateWizardModelSelect();
   updateAiChatModel();
 }
@@ -1535,7 +1727,7 @@ function saveEntry() {
   } else {
     data.push(entry);
   }
-  data.sort((a,b) => a.datum < b.datum ? -1 : 1);
+  data.sort((a,b) => a.datum.localeCompare(b.datum));
   saveData(data);
   showToast('Unos spremljen!');
   updateStats();
@@ -1948,7 +2140,7 @@ function renderHeatmap(entry) {
     const tj = sec.tjedno ?? 0, god = sec.godisnje ?? 0, pol = sec.polugod ?? 0;
     return {
       name: s, vals, sec,
-      momentum: tj - god,
+      momentum: calcMomentum(sec),
       reversal: (tj > 0 ? tj : 0) + Math.abs(Math.min(god, pol, 0)),
       dispersion: validVals.length > 1 ? Math.max(...validVals) - Math.min(...validVals) : 0
     };
@@ -1967,7 +2159,7 @@ function renderHeatmap(entry) {
 
   // Extra columns for computed sorts
   const showExtra = ['momentum','reversal','dispersion'].includes(hmSortMode);
-  const extraLabel = hmSortMode === 'momentum' ? 'Mom.' : hmSortMode === 'reversal' ? 'Rev.' : 'Disp.';
+  const extraLabel = hmSortMode === 'momentum' ? 'Mom. (' + getMomentumLabel().replace(' − ','-') + ')' : hmSortMode === 'reversal' ? 'Rev.' : 'Disp.';
   const cols = PERIODI.length + (showExtra ? 1 : 0);
 
   const hm = document.getElementById('heatmap');
@@ -2053,65 +2245,55 @@ function renderCharts() {
   });
 
   // 3. Dispersion chart (spread between best & worst per week)
-  if (data.length >= 2) {
-    const dispData = data.map(e => {
-      const vals = items.map(s => e.sektori[s]?.[vizPeriod] ?? null).filter(v => v !== null);
-      if (vals.length < 2) return { best: 0, worst: 0, spread: 0 };
-      return { best: Math.max(...vals), worst: Math.min(...vals), spread: Math.max(...vals) - Math.min(...vals) };
-    });
-    charts.dispersion = new Chart(document.getElementById('dispersionChart'), {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Najbolji', data: dispData.map(d => d.best), borderColor: '#22d3a0', backgroundColor: 'rgba(34,211,160,0.1)', fill: '+1', borderWidth: 2, pointRadius: 2, tension: 0.3 },
-          { label: 'Najgori', data: dispData.map(d => d.worst), borderColor: '#f43f5e', backgroundColor: 'rgba(244,63,94,0.1)', borderWidth: 2, pointRadius: 2, tension: 0.3 },
-          { label: 'Spread', data: dispData.map(d => d.spread), borderColor: '#f59e0b', borderDash: [5,5], backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, tension: 0.3 }
-        ]
-      },
-      options: chartOpts('Disperzija')
-    });
-  }
+  const dispData = data.map(e => {
+    const vals = items.map(s => e.sektori[s]?.[vizPeriod] ?? null).filter(v => v !== null);
+    if (vals.length < 2) return { best: null, worst: null, spread: null };
+    return { best: Math.max(...vals), worst: Math.min(...vals), spread: Math.max(...vals) - Math.min(...vals) };
+  });
+  charts.dispersion = new Chart(document.getElementById('dispersionChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Najbolji', data: dispData.map(d => d.best), borderColor: '#22d3a0', backgroundColor: 'rgba(34,211,160,0.1)', fill: false, borderWidth: 2, pointRadius: 2, spanGaps: true, tension: 0.3 },
+        { label: 'Najgori', data: dispData.map(d => d.worst), borderColor: '#f43f5e', backgroundColor: 'rgba(244,63,94,0.1)', borderWidth: 2, pointRadius: 2, spanGaps: true, tension: 0.3 },
+        { label: 'Spread', data: dispData.map(d => d.spread), borderColor: '#f59e0b', borderDash: [5,5], backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, spanGaps: true, tension: 0.3 }
+      ]
+    },
+    options: chartOpts('Disperzija (best-worst po tjednu)')
+  });
 
   // 4. Breadth chart (% positive per week)
-  if (data.length >= 2) {
-    const breadthData = data.map(e => {
-      const vals = items.map(s => e.sektori[s]?.[vizPeriod] ?? null).filter(v => v !== null);
-      if (vals.length === 0) return 50;
-      return (vals.filter(v => v > 0).length / vals.length) * 100;
-    });
-    charts.breadth = new Chart(document.getElementById('breadthChart'), {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: '% pozitivnih', data: breadthData,
-          borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)',
-          fill: true, borderWidth: 2, pointRadius: 3, tension: 0.3
-        }]
-      },
-      options: {
-        ...chartOpts('Breadth'),
-        scales: {
-          ...chartOpts('').scales,
-          y: { ...chartOpts('').scales.y, min: 0, max: 100,
-            ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 }, callback: v => v + '%' }
-          }
-        },
-        plugins: {
-          ...chartOpts('').plugins,
-          annotation: {
-            annotations: { line50: { type: 'line', yMin: 50, yMax: 50, borderColor: 'rgba(255,255,255,0.15)', borderDash: [5,5] }}
-          }
+  const breadthData = data.map(e => {
+    const vals = items.map(s => e.sektori[s]?.[vizPeriod] ?? null).filter(v => v !== null);
+    if (vals.length === 0) return null;
+    return (vals.filter(v => v > 0).length / vals.length) * 100;
+  });
+  charts.breadth = new Chart(document.getElementById('breadthChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '% pozitivnih', data: breadthData,
+        borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)',
+        fill: true, borderWidth: 2, pointRadius: 3, spanGaps: true, tension: 0.3
+      }]
+    },
+    options: {
+      ...chartOpts('Breadth (% pozitivnih stavki)'),
+      scales: {
+        ...chartOpts('').scales,
+        y: { ...chartOpts('').scales.y, min: 0, max: 100,
+          ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 }, callback: v => v + '%' }
         }
       }
-    });
-  }
+    }
+  });
 
   // 5. Momentum score bar (weekly minus yearly) for last week
   const momData = items.map(s => ({
     name: s.length > 16 ? s.substring(0,14)+'…' : s,
-    score: (last.sektori[s]?.tjedno ?? 0) - (last.sektori[s]?.godisnje ?? 0)
+    score: calcMomentum(last.sektori[s] || {})
   })).sort((a,b) => b.score - a.score);
 
   charts.momentum = new Chart(document.getElementById('momentumChart'), {
@@ -2119,7 +2301,7 @@ function renderCharts() {
     data: {
       labels: momData.map(d => d.name),
       datasets: [{
-        label: 'Momentum Score (tj−god)', data: momData.map(d => d.score),
+        label: `Momentum Score (${getMomentumLabel()})`, data: momData.map(d => d.score),
         backgroundColor: momData.map(d => d.score >= 5 ? 'rgba(34,211,160,0.8)' : d.score >= 0 ? 'rgba(56,189,248,0.6)' : d.score >= -5 ? 'rgba(251,146,60,0.6)' : 'rgba(244,63,94,0.7)'),
         borderWidth: 0
       }]
@@ -2264,6 +2446,7 @@ function renderSignals() {
   if (data.length === 0 || items.length === 0) {
     document.getElementById('signalOutput').innerHTML = '<div class="empty-state">Nema podataka</div>';
     document.getElementById('turnaroundOutput').innerHTML = '';
+    document.getElementById('downturnOutput').innerHTML = '';
     return;
   }
 
@@ -2279,7 +2462,7 @@ function renderSignals() {
     if (!sec) return;
     const tj = sec.tjedno ?? 0, mj = sec.miesecno ?? 0, god = sec.godisnje ?? 0;
     const pol = sec.polugod ?? 0, tromj = sec.tromj ?? 0, ytd = sec.ytd ?? 0;
-    const mom = tj - god;
+    const mom = calcMomentum(sec);
 
     let match = true;
     // Basic filters — if positive threshold → value must be >= threshold; if negative → value must be <=
@@ -2318,6 +2501,7 @@ function renderSignals() {
 
   // ── Turnaround section (always render) ──
   renderTurnaroundCandidates(last, items);
+  renderDownturnCandidates(last, items);
   renderConsistency(data);
 }
 
@@ -2325,23 +2509,24 @@ function renderTurnaroundCandidates(entry, items) {
   const candidates = items.map(s => {
     const sec = entry.sektori[s];
     if (!sec) return null;
-    const tj = sec.tjedno ?? 0, mj = sec.miesecno ?? 0, god = sec.godisnje ?? 0, pol = sec.polugod ?? 0;
-    const longTermPain = Math.min(god, pol);
-    const shortTermGain = tj;
-    const score = shortTermGain - longTermPain;
-    return { name: s, tj, mj, tromj: sec.tromj ?? 0, pol, god, ytd: sec.ytd ?? 0, longTermPain, shortTermGain, score };
-  }).filter(c => c && c.longTermPain < -5 && c.shortTermGain > 0)
+    const tj = sec.tjedno ?? 0, mj = sec.miesecno ?? 0, god = sec.godisnje ?? 0, pol = sec.polugod ?? 0, tromj = sec.tromj ?? 0;
+    const shortTermBlend = turnaroundScoreMode === 'weekMonthYear' ? (tj + mj) / 2
+      : turnaroundScoreMode === 'weekMonthQuarterYear' ? (tj + mj + tromj) / 3
+      : tj;
+    const score = calcTurnaroundScore(sec);
+    return { name: s, tj, mj, tromj, pol, god, ytd: sec.ytd ?? 0, score, shortTermBlend };
+  }).filter(c => c && c.god < -5 && c.shortTermBlend > 0)
     .sort((a,b) => b.score - a.score);
 
   const out = document.getElementById('turnaroundOutput');
   if (candidates.length === 0) {
-    out.innerHTML = '<div class="empty-state" style="color:var(--text-dim)">Nema turnaround kandidata (potreban: god. ili 6mj. < -5% i tj. > 0%)</div>';
+    out.innerHTML = '<div class="empty-state" style="color:var(--text-dim)">Nema turnaround kandidata (potreban: God. < -5% i pozitivan short-term blend prema odabranoj formuli)</div>';
     return;
   }
 
   out.innerHTML = `<div class="table-wrapper"><table>
     <thead><tr>
-      <th style="text-align:left">Naziv</th><th>Tjedno</th><th>Mjes.</th><th>3 Mjes.</th><th>6 Mjes.</th><th>God.</th><th>YTD</th><th style="color:var(--amber)">T-Score</th>
+      <th style="text-align:left">Naziv</th><th>Tjedno</th><th>Mjes.</th><th>3 Mjes.</th><th>6 Mjes.</th><th>God.</th><th>YTD</th><th style="color:var(--amber)" title="Aktivna formula: ${getTurnaroundScoreLabel()}">T-Score</th>
     </tr></thead><tbody>
     ${candidates.map(c => {
       const sc = c.score;
@@ -2355,7 +2540,46 @@ function renderTurnaroundCandidates(entry, items) {
     }).join('')}
   </tbody></table></div>
   <div style="font-size:11px;color:var(--text-dim);margin-top:8px;font-family:'JetBrains Mono',monospace">
-    T-Score = kratkoročni rast − dugoročni pad. Viši score = jači turnaround signal. Stavke sortirane po T-Score desc.
+    T-Score formula: ${getTurnaroundScoreLabel()}. Viši score = jači turnaround signal. Stavke sortirane po T-Score desc.
+  </div>`;
+}
+
+function renderDownturnCandidates(entry, items) {
+  const candidates = items.map(s => {
+    const sec = entry.sektori[s];
+    if (!sec) return null;
+    const tj = sec.tjedno ?? 0, mj = sec.miesecno ?? 0, god = sec.godisnje ?? 0, pol = sec.polugod ?? 0, tromj = sec.tromj ?? 0;
+    const shortTermBlend = downturnScoreMode === 'weekMonthYear' ? (tj + mj) / 2
+      : downturnScoreMode === 'weekMonthQuarterYear' ? (tj + mj + tromj) / 3
+      : tj;
+    const score = calcDownturnScore(sec);
+    return { name: s, tj, mj, tromj, pol, god, ytd: sec.ytd ?? 0, score, shortTermBlend };
+  }).filter(c => c && c.god > 8 && c.shortTermBlend < 0)
+    .sort((a,b) => b.score - a.score);
+
+  const out = document.getElementById('downturnOutput');
+  if (candidates.length === 0) {
+    out.innerHTML = '<div class="empty-state" style="color:var(--text-dim)">Nema downturn kandidata (potreban: God. > 8% i negativan short-term blend prema odabranoj formuli)</div>';
+    return;
+  }
+
+  out.innerHTML = `<div class="table-wrapper"><table>
+    <thead><tr>
+      <th style="text-align:left">Naziv</th><th>Tjedno</th><th>Mjes.</th><th>3 Mjes.</th><th>6 Mjes.</th><th>God.</th><th>YTD</th><th style="color:var(--amber)" title="Aktivna formula: ${getDownturnScoreLabel()}">D-Score</th>
+    </tr></thead><tbody>
+    ${candidates.map(c => {
+      const sc = c.score;
+      const scColor = sc > 15 ? 'var(--red)' : sc > 8 ? 'var(--amber)' : 'var(--text)';
+      return `<tr>
+        <td>${c.name}</td>
+        <td>${valCell(c.tj)}</td><td>${valCell(c.mj)}</td><td>${valCell(c.tromj)}</td>
+        <td>${valCell(c.pol)}</td><td>${valCell(c.god)}</td><td>${valCell(c.ytd)}</td>
+        <td style="color:${scColor};font-weight:700;text-align:right">${sc.toFixed(1)}</td>
+      </tr>`;
+    }).join('')}
+  </tbody></table></div>
+  <div style="font-size:11px;color:var(--text-dim);margin-top:8px;font-family:'JetBrains Mono',monospace">
+    D-Score formula: ${getDownturnScoreLabel()}. Viši score = jači short-term raspad unutar dugoročno snažnog trenda.
   </div>`;
 }
 
@@ -2557,13 +2781,23 @@ function exportJSON() {
 
 function exportCSV() {
   const data = getData();
-  const items = getItems();
+  const items = getAllItemsFromDataset(data);
   const header = ['datum','label','stavka','tjedno','miesecno','tromj','polugod','godisnje','ytd'];
   const rows = [header.join(',')];
   data.forEach(e => {
     items.forEach(s => {
       const sec = e.sektori[s] || {};
-      rows.push([e.datum, `"${e.label}"`, `"${s}"`, sec.tjedno??'', sec.miesecno??'', sec.tromj??'', sec.polugod??'', sec.godisnje??'', sec.ytd??''].join(','));
+      rows.push([
+        csvEscape(e.datum),
+        csvEscape(e.label),
+        csvEscape(s),
+        sec.tjedno ?? '',
+        sec.miesecno ?? '',
+        sec.tromj ?? '',
+        sec.polugod ?? '',
+        sec.godisnje ?? '',
+        sec.ytd ?? ''
+      ].join(','));
     });
   });
   const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8' });
@@ -2571,7 +2805,74 @@ function exportCSV() {
   a.href = URL.createObjectURL(blob);
   a.download = `rotacija_${currentMode}_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
-  showToast('CSV izvezen');
+  showToast('CSV izvezen (aktivni prikaz)');
+}
+
+function exportAllCSV() {
+  const sektoriData = JSON.parse(localStorage.getItem(STORAGE_KEYS.sektori) || '[]');
+  const industrijeData = JSON.parse(localStorage.getItem(STORAGE_KEYS.industrije) || '[]');
+  const header = ['dataset','datum','label','stavka','tjedno','miesecno','tromj','polugod','godisnje','ytd'];
+  const rows = [header.join(',')];
+
+  function appendRows(datasetName, dataset) {
+    const items = getAllItemsFromDataset(dataset);
+    dataset.forEach(e => {
+      items.forEach(item => {
+        const sec = e.sektori?.[item] || {};
+        rows.push([
+          csvEscape(datasetName),
+          csvEscape(e.datum),
+          csvEscape(e.label),
+          csvEscape(item),
+          sec.tjedno ?? '',
+          sec.miesecno ?? '',
+          sec.tromj ?? '',
+          sec.polugod ?? '',
+          sec.godisnje ?? '',
+          sec.ytd ?? ''
+        ].join(','));
+      });
+    });
+  }
+
+  appendRows('sektori', sektoriData);
+  appendRows('industrije', industrijeData);
+
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `rotacija_sve_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSV izvezen (svi podaci)');
+}
+
+function exportJSONL() {
+  const payload = [];
+  const sources = [
+    ['sektori', JSON.parse(localStorage.getItem(STORAGE_KEYS.sektori) || '[]')],
+    ['industrije', JSON.parse(localStorage.getItem(STORAGE_KEYS.industrije) || '[]')]
+  ];
+
+  sources.forEach(([dataset, entries]) => {
+    entries.forEach(entry => {
+      Object.entries(entry.sektori || {}).forEach(([stavka, metrics]) => {
+        payload.push(JSON.stringify({
+          dataset,
+          datum: entry.datum,
+          label: entry.label,
+          stavka,
+          ...metrics
+        }));
+      });
+    });
+  });
+
+  const blob = new Blob([payload.join('\n')], { type: 'application/x-ndjson;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `rotacija_ai_${new Date().toISOString().slice(0,10)}.jsonl`;
+  a.click();
+  showToast('JSONL izvezen za AI analizu');
 }
 
 function importJSON() { document.getElementById('importFile').click(); }
@@ -2606,7 +2907,7 @@ function handleImport(event) {
           else merged.push(entry);
           valid++;
         });
-        merged.sort((a,b) => a.datum < b.datum ? -1 : 1);
+        merged.sort((a,b) => a.datum.localeCompare(b.datum));
         saveData(merged);
         showToast(`Uvezeno ${valid} unosa`);
       }
@@ -3072,8 +3373,9 @@ STOVALL SECTOR ROTATION MODEL:
 • PUNA RECESIJA: Utilities, Consumer Defensive dominiraju. Kamate padaju agresivno.
 Stock market prednjači ekonomiji 6-9 mjeseci. Analiziraj leadership sektora da odrediš fazu ciklusa.
 
-T-SCORE = Tjedno - min(Godišnje, 6mj). Viši = jači turnaround signal.
-MOMENTUM = Tjedno - Godišnje. Pozitivan = kratkoročni momentum jači od dugoročnog.
+T-SCORE = ${getTurnaroundScoreLabel()}. Viši = jači turnaround signal.
+D-SCORE = ${getDownturnScoreLabel()}. Viši = jači downturn signal (kratkoročni raspad nakon dugoročne snage).
+MOMENTUM = ${getMomentumLabel()}. Pozitivan = kratkoročni momentum jači od dugoročnog.
 
 TRENUTNI PODACI:${context}`;
 
